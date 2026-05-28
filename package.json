@@ -1,0 +1,17 @@
+{
+  "name": "meets",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@8.15.5",
+  "scripts": {
+    "mobile": "pnpm --filter @meets/mobile start",
+    "backend": "pnpm --filter @meets/backend start:dev",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.9.16"
+  }
+}
