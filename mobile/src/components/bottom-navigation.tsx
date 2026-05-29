@@ -4,7 +4,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+
+const Grapefruit = '#FF5A5F';
+const GrapefruitSoft = '#FFE6E3';
+const WarmSurface = '#FFFCFB';
+const WarmBorder = '#E8E2DF';
+const MutedText = '#766F6B';
 
 type NavigationItem = {
   href: Href;
@@ -43,7 +48,6 @@ const items: NavigationItem[] = [
 export function BottomNavigation() {
   const router = useRouter();
   const pathname = usePathname();
-  const theme = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
@@ -52,15 +56,15 @@ export function BottomNavigation() {
         style={[
           styles.bar,
           {
-            backgroundColor: theme.background,
-            borderColor: theme.backgroundSelected,
+            backgroundColor: WarmSurface,
+            borderColor: WarmBorder,
             paddingBottom: Math.max(insets.bottom, Spacing.two),
           },
         ]}>
         {items.map((item) => {
           const active = pathname === item.match;
-          const tintColor = active ? '#FF385C' : theme.textSecondary;
-          const iconBackgroundColor = active ? '#FFE8EE' : 'transparent';
+          const tintColor = active ? Grapefruit : MutedText;
+          const iconBackgroundColor = active ? GrapefruitSoft : 'transparent';
 
           return (
             <Pressable
