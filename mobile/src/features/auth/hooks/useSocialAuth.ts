@@ -127,11 +127,12 @@ export function useSocialAuth() {
 
       // Native Google Sign-In requires a development build; it does not run in Expo Go.
       const result = await GoogleSignin.signIn();
-      if (result.type !== 'success' || !result.data.idToken) {
+      const idToken = result.type === 'success' ? result.data?.idToken : null;
+      if (!idToken) {
         throw new Error('Google did not return an ID token');
       }
 
-      const response = await loginWithGoogle({ idToken: result.data.idToken });
+      const response = await loginWithGoogle({ idToken });
       await saveTokens(response.tokens);
       setAuthUser(response);
       return response;
