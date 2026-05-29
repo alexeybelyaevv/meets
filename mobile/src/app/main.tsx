@@ -1,47 +1,116 @@
-import { Pressable, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemedText } from '@/components/themed-text';
+import { StyleSheet, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { MaxContentWidth } from '@/constants/theme';
+
+const mapHtml = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      html, body, #map {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: #f8fafc;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+
+      .leaflet-container {
+        background: #f8fafc;
+      }
+
+      .leaflet-control-attribution {
+        font-size: 10px;
+      }
+
+      .leaflet-top.leaflet-left .leaflet-control-zoom {
+        margin-top: 14px;
+        margin-left: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow:
+          0 16px 32px rgba(15, 23, 42, 0.14),
+          0 4px 10px rgba(15, 23, 42, 0.08);
+      }
+
+      .leaflet-control-zoom a {
+        width: 42px;
+        height: 42px;
+        line-height: 42px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.94);
+        color: #0f172a;
+        font-size: 24px;
+        font-weight: 500;
+      }
+
+      .leaflet-control-zoom a:first-child {
+        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      }
+
+      .leaflet-touch .leaflet-control-zoom a {
+        width: 42px;
+        height: 42px;
+        line-height: 42px;
+        font-size: 24px;
+      }
+
+      .leaflet-touch .leaflet-bar {
+        border: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      const map = L.map('map', {
+        zoomControl: true,
+        attributionControl: true,
+        center: [48.1452, 17.1164],
+        zoom: 14,
+      });
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      }).addTo(map);
+
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 250);
+    </script>
+  </body>
+</html>`;
 
 export default function MainScreen() {
-  const router = useRouter();
-
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.content}>
-          <View style={styles.header}>
-            <View>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                Meets
-              </ThemedText>
-              <ThemedText type="subtitle">Main page</ThemedText>
-            </View>
-
-            <Pressable onPress={() => router.replace('/login')} style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.secondaryButton}>
-                <ThemedText type="smallBold">Sign out</ThemedText>
-              </ThemedView>
-            </Pressable>
-          </View>
-
-          <ThemedView type="backgroundElement" style={styles.placeholder}>
-            <View style={styles.emptyMark}>
-              <ThemedText type="smallBold" style={styles.emptyMarkText}>
-                M
-              </ThemedText>
-            </View>
-            <ThemedText type="subtitle" style={styles.emptyTitle}>
-              Events feed coming soon
-            </ThemedText>
-            <ThemedText type="default" themeColor="textSecondary" style={styles.emptyText}>
-              This is a temporary main screen while the real Meets experience is being built.
-            </ThemedText>
-          </ThemedView>
-        </ThemedView>
-      </SafeAreaView>
+      <View style={styles.screen}>
+        <WebView
+          originWhitelist={['*']}
+          source={{ html: mapHtml, baseUrl: 'https://basemaps.cartocdn.com' }}
+          javaScriptEnabled
+          domStorageEnabled
+          startInLoadingState
+          mixedContentMode="always"
+          allowsInlineMediaPlayback
+          style={styles.map}
+        />
+      </View>
     </ThemedView>
   );
 }
@@ -52,59 +121,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
   },
-  safeArea: {
+  screen: {
     flex: 1,
     width: '100%',
     maxWidth: MaxContentWidth,
+    overflow: 'hidden',
   },
-  content: {
+  map: {
     flex: 1,
-    gap: Spacing.four,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.five,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
-  },
-  secondaryButton: {
-    minHeight: 40,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.three,
-  },
-  placeholder: {
-    flex: 1,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.three,
-    padding: Spacing.four,
-  },
-  emptyMark: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1D6F5F',
-  },
-  emptyMarkText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-  },
-  emptyTitle: {
-    textAlign: 'center',
-  },
-  emptyText: {
-    maxWidth: 360,
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.72,
+    backgroundColor: '#F8FAFC',
   },
 });
