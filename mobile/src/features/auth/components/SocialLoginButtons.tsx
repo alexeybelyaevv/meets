@@ -1,10 +1,14 @@
+import { SymbolView } from 'expo-symbols';
+import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { AuthButton, AuthColors, AuthSurfaceCard } from './auth-ui';
 import { useSocialAuth } from '../hooks/useSocialAuth';
 
-export function SocialLoginButtons() {
+const googleLogo = require('@/assets/images/google-g.png');
+
+export function SocialLoginButtons({ compact }: { compact?: boolean }) {
   const {
     authUser,
     error,
@@ -19,37 +23,86 @@ export function SocialLoginButtons() {
 
   return (
     <View style={styles.container}>
-      {isAppleAvailable && (
-        <AuthButton
-          label={loading === 'apple' ? 'Signing in...' : 'Continue with Apple'}
-          disabled={Boolean(loading)}
-          onPress={signInWithApple}
-        />
+      {compact ? (
+        <View style={styles.compactRow}>
+          {isAppleAvailable ? (
+            <CompactSocialButton
+              disabled={Boolean(loading)}
+              label="Apple"
+              onPress={signInWithApple}
+              renderIcon={() => (
+                <SymbolView
+                  name={{ ios: 'apple.logo', android: 'smartphone', web: 'smartphone' }}
+                  size={18}
+                  tintColor="#111111"
+                  weight="semibold"
+                />
+              )}
+            />
+          ) : null}
+          <CompactSocialButton
+            disabled={Boolean(loading) || !isGoogleAvailable}
+            label="Google"
+            onPress={signInWithGoogle}
+            renderIcon={() => (
+              <Image contentFit="contain" source={googleLogo} style={styles.googleImage} />
+            )}
+          />
+          <CompactSocialButton
+            disabled={Boolean(loading)}
+            label="Telegram"
+            onPress={startTelegramLogin}
+            renderIcon={() => (
+              <SymbolView
+                name={{ ios: 'paperplane.fill', android: 'send', web: 'send' }}
+                size={18}
+                tintColor="#229ED9"
+                weight="semibold"
+              />
+            )}
+          />
+        </View>
+      ) : (
+        <>
+          {isAppleAvailable && (
+            <AuthButton
+              label={loading === 'apple' ? 'Signing in...' : 'Continue with Apple'}
+              disabled={Boolean(loading)}
+              onPress={signInWithApple}
+              icon={{ ios: 'apple.logo', android: 'smartphone', web: 'smartphone' }}
+              secondary
+            />
+          )}
+
+          <AuthButton
+            label={
+              isGoogleAvailable
+                ? loading === 'google'
+                  ? 'Signing in...'
+                  : 'Continue with Google'
+                : 'Google requires a development build'
+            }
+            disabled={Boolean(loading) || !isGoogleAvailable}
+            onPress={signInWithGoogle}
+            icon={{ ios: 'globe', android: 'language', web: 'language' }}
+            secondary
+          />
+
+          <AuthButton
+            label={loading === 'telegram' ? 'Opening Telegram...' : 'Continue with Telegram'}
+            disabled={Boolean(loading)}
+            onPress={startTelegramLogin}
+            icon={{ ios: 'paperplane.fill', android: 'send', web: 'send' }}
+            secondary
+          />
+        </>
       )}
 
-      <AuthButton
-        label={
-          isGoogleAvailable
-            ? loading === 'google'
-              ? 'Signing in...'
-              : 'Continue with Google'
-            : 'Google requires a development build'
-        }
-        disabled={Boolean(loading) || !isGoogleAvailable}
-        onPress={signInWithGoogle}
-      />
-
-      <AuthButton
-        label={loading === 'telegram' ? 'Opening Telegram...' : 'Continue with Telegram'}
-        disabled={Boolean(loading)}
-        onPress={startTelegramLogin}
-      />
-
       {authUser && (
-        <ThemedView type="backgroundElement" style={styles.status}>
+        <AuthSurfaceCard style={styles.status}>
           <ThemedText type="smallBold">{authUser.user.name ?? authUser.user.email ?? 'Signed in'}</ThemedText>
           <AuthButton label="Sign out" disabled={Boolean(loading)} onPress={signOut} secondary />
-        </ThemedView>
+        </AuthSurfaceCard>
       )}
 
       {error && (
@@ -61,29 +114,32 @@ export function SocialLoginButtons() {
   );
 }
 
-function AuthButton({
-  label,
+function CompactSocialButton({
   disabled,
-  secondary,
+  label,
   onPress,
+  renderIcon,
 }: {
-  label: string;
   disabled: boolean;
-  secondary?: boolean;
+  label: string;
   onPress: () => void | Promise<unknown>;
+  renderIcon: () => React.ReactNode;
 }) {
   return (
     <Pressable
+      accessibilityRole="button"
       disabled={disabled}
       onPress={() => {
         void Promise.resolve(onPress()).catch(() => {});
       }}
-      style={({ pressed }) => [pressed && styles.pressed]}>
-      <ThemedView
-        type={secondary ? 'backgroundElement' : 'backgroundSelected'}
-        style={[styles.button, disabled && styles.disabled]}>
-        <ThemedText type="smallBold">{label}</ThemedText>
-      </ThemedView>
+      style={({ pressed }) => [pressed && styles.pressed]}
+    >
+      <View style={[styles.compactButton, disabled && styles.disabled]}>
+        <View style={styles.compactIcon}>{renderIcon()}</View>
+        <ThemedText type="smallBold" style={styles.compactLabel}>
+          {label}
+        </ThemedText>
+      </View>
     </Pressable>
   );
 }
@@ -91,27 +147,52 @@ function AuthButton({
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'stretch',
-    gap: Spacing.three,
+    gap: Spacing.two,
   },
-  button: {
-    minHeight: 48,
-    borderRadius: Spacing.two,
+  compactRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.two,
+  },
+  compactButton: {
+    minWidth: 96,
+    minHeight: 52,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: AuthColors.border,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.three,
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  compactIcon: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactLabel: {
+    color: AuthColors.text,
+  },
+  googleImage: {
+    width: 18,
+    height: 18,
   },
   disabled: {
-    opacity: 0.6,
+    opacity: 0.55,
   },
   pressed: {
-    opacity: 0.72,
+    opacity: 0.8,
   },
   status: {
-    borderRadius: Spacing.two,
     gap: Spacing.two,
     padding: Spacing.three,
+    borderRadius: 22,
   },
   error: {
-    color: '#B00020',
+    color: AuthColors.accent,
   },
 });

@@ -1,235 +1,340 @@
-import { useState } from 'react';
+import { useState } from "react";
+import { useRouter } from "expo-router";
+import { Image } from "expo-image";
+import { SymbolView } from "expo-symbols";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ThemedText } from "@/components/themed-text";
+import { MaxContentWidth } from "@/constants/theme";
 import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SocialLoginButtons } from '@/features/auth/components/SocialLoginButtons';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+  AuthButton,
+  AuthColors,
+  AuthTextField,
+} from "@/features/auth/components/auth-ui";
+import { SocialLoginButtons } from "@/features/auth/components/SocialLoginButtons";
+
+type AuthMode = "login" | "signup";
+const heroGradient = require("@/assets/images/login-hero-gradient.png");
+const meetsWordmark = require("@/assets/images/meets-wordmark.svg");
 
 export default function LoginScreen() {
   const router = useRouter();
-  const theme = useTheme();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<AuthMode>("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const isLogin = mode === "login";
 
   function handleSubmit() {
-    router.replace('/main');
+    router.replace("/main");
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.keyboardView}>
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}>
-            <ThemedView style={styles.content}>
-              <View style={styles.brandRow}>
-                <View style={styles.brandMark}>
-                  <ThemedText type="smallBold" style={styles.brandLetter}>
-                    M
-                  </ThemedText>
-                </View>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  Meets
-                </ThemedText>
-              </View>
+    <ScrollView
+      bounces={false}
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.screen}>
+        <View style={styles.heroFormStack}>
+          <Image
+            contentFit="cover"
+            contentPosition={{ left: "58%", top: "54%" }}
+            source={heroGradient}
+            style={styles.heroBackdrop}
+          />
 
-              <ThemedView type="backgroundElement" style={styles.panel}>
-                <View style={styles.header}>
-                  <ThemedText type="title" style={styles.title}>
-                    Find your next plan.
-                  </ThemedText>
-                  <ThemedText type="default" themeColor="textSecondary" style={styles.subtitle}>
-                    Sign in to discover local events, join friends, and keep your plans in one place.
-                  </ThemedText>
-                </View>
+          <View style={styles.hero}>
+            <View style={styles.heroVignette} />
 
-                <View style={styles.form}>
-                  <View
-                    style={[
-                      styles.inputGroup,
-                      { backgroundColor: theme.background, borderColor: theme.backgroundSelected },
-                    ]}>
-                    <TextInput
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      autoCorrect={false}
-                      inputMode="email"
-                      onChangeText={setEmail}
-                      placeholder="Email"
-                      placeholderTextColor={theme.textSecondary}
-                      returnKeyType="next"
-                      style={[styles.input, { color: theme.text }]}
-                      textContentType="emailAddress"
-                      value={email}
-                    />
-                    <View
-                      style={[
-                        styles.inputSeparator,
-                        { backgroundColor: theme.backgroundSelected },
-                      ]}
-                    />
-                    <TextInput
-                      autoCapitalize="none"
-                      autoComplete="password"
-                      onChangeText={setPassword}
-                      placeholder="Password"
-                      placeholderTextColor={theme.textSecondary}
-                      returnKeyType="done"
-                      secureTextEntry
-                      style={[styles.input, { color: theme.text }]}
-                      textContentType="password"
-                      value={password}
-                      onSubmitEditing={handleSubmit}
-                    />
-                  </View>
+            <View style={styles.heroLogoWrap}>
+              <Image
+                contentFit="contain"
+                source={meetsWordmark}
+                style={styles.heroLogoAura}
+              />
+              <Image
+                contentFit="contain"
+                source={meetsWordmark}
+                style={styles.heroLogo}
+              />
+            </View>
+          </View>
 
-                  <Pressable
-                    onPress={handleSubmit}
-                    style={({ pressed }) => [pressed && styles.pressed]}>
-                    <View style={styles.primaryButton}>
-                      <ThemedText type="smallBold" style={styles.primaryButtonText}>
-                        Continue
-                      </ThemedText>
-                    </View>
-                  </Pressable>
-                </View>
-
-                <View style={styles.dividerRow}>
-                  <View style={[styles.dividerLine, { backgroundColor: theme.backgroundSelected }]} />
-                  <ThemedText type="small" themeColor="textSecondary">
-                    or
-                  </ThemedText>
-                  <View style={[styles.dividerLine, { backgroundColor: theme.backgroundSelected }]} />
-                </View>
-
-                <SocialLoginButtons />
-              </ThemedView>
-
-              <ThemedText type="small" themeColor="textSecondary" style={styles.legal}>
-                Login is mocked for now. Continue opens the main page.
+          <View style={styles.formShell}>
+            <View style={styles.formHeader}>
+              <ThemedText type="subtitle" style={styles.formTitle}>
+                {isLogin ? "Welcome back" : "Create account"}
               </ThemedText>
-            </ThemedView>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </ThemedView>
+              {!isLogin ? (
+                <Pressable
+                  onPress={() => setMode("login")}
+                  style={({ pressed }) => [pressed && styles.pressed]}
+                >
+                  <ThemedText type="small" style={styles.backText}>
+                    Back to login
+                  </ThemedText>
+                </Pressable>
+              ) : null}
+            </View>
+
+            <View style={styles.fields}>
+              {!isLogin ? (
+                <InputRow
+                  icon={{ ios: "person", android: "person", web: "person" }}
+                  onChangeText={setName}
+                  placeholder="Name"
+                  returnKeyType="next"
+                  textContentType="name"
+                  value={name}
+                  autoCapitalize="words"
+                  autoComplete="name"
+                />
+              ) : null}
+              <InputRow
+                icon={{ ios: "envelope", android: "email", web: "mail" }}
+                onChangeText={setEmail}
+                placeholder="Email"
+                returnKeyType="next"
+                textContentType="emailAddress"
+                value={email}
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect={false}
+                inputMode="email"
+              />
+              <InputRow
+                icon={{ ios: "lock", android: "lock", web: "lock" }}
+                onChangeText={setPassword}
+                placeholder="Password"
+                returnKeyType={isLogin ? "done" : "next"}
+                secureTextEntry
+                textContentType="password"
+                value={password}
+                autoCapitalize="none"
+                autoComplete="password"
+                onSubmitEditing={isLogin ? handleSubmit : undefined}
+              />
+              {!isLogin ? (
+                <InputRow
+                  icon={{ ios: "lock", android: "lock", web: "lock" }}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Confirm password"
+                  returnKeyType="done"
+                  secureTextEntry
+                  textContentType="password"
+                  value={confirmPassword}
+                  autoCapitalize="none"
+                  onSubmitEditing={handleSubmit}
+                />
+              ) : null}
+            </View>
+
+            {isLogin ? (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.forgotWrap,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <ThemedText type="small" style={styles.forgotText}>
+                  Forgot Password
+                </ThemedText>
+              </Pressable>
+            ) : null}
+
+            <AuthButton
+              label={isLogin ? "Login" : "Sign Up"}
+              onPress={handleSubmit}
+            />
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <ThemedText type="small" style={styles.dividerText}>
+                Or login with
+              </ThemedText>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <SocialLoginButtons compact />
+
+            <View style={styles.footerRow}>
+              <ThemedText type="small" style={styles.footerText}>
+                {isLogin ? "Don't have account?" : "Already have account?"}
+              </ThemedText>
+              <Pressable
+                onPress={() => setMode(isLogin ? "signup" : "login")}
+                style={({ pressed }) => [pressed && styles.pressed]}
+              >
+                <ThemedText type="smallBold" style={styles.footerLink}>
+                  {isLogin ? "Sign Up" : "Login"}
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+
+function InputRow(
+  props: React.ComponentProps<typeof AuthTextField> & {
+    icon: React.ComponentProps<typeof SymbolView>["name"];
+  },
+) {
+  const { icon, style, ...inputProps } = props;
+
+  return (
+    <View style={styles.inputRow}>
+      <SymbolView name={icon} size={16} tintColor="#D0D0D0" weight="regular" />
+      <AuthTextField {...inputProps} style={[styles.input, style]} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  safeArea: {
-    flex: 1,
-    width: '100%',
-    maxWidth: MaxContentWidth,
-  },
-  keyboardView: {
-    flex: 1,
-  },
   scrollContent: {
     flexGrow: 1,
+    backgroundColor: "#EEF1EF",
   },
-  content: {
+  screen: {
     flexGrow: 1,
-    justifyContent: 'space-between',
-    gap: Spacing.four,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.five,
+    width: "100%",
+    maxWidth: Math.min(MaxContentWidth, 480),
+    alignSelf: "center",
+    backgroundColor: "#EEF1EF",
   },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
+  heroFormStack: {
+    flex: 1,
+    backgroundColor: "#EEF1EF",
+    overflow: "hidden",
   },
-  brandMark: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1D6F5F',
+  heroBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 420,
+    width: "100%",
   },
-  brandLetter: {
-    color: '#FFFFFF',
+  hero: {
+    minHeight: 372,
+    backgroundColor: "transparent",
+    overflow: "hidden",
+    paddingTop: 0,
+    paddingHorizontal: 0,
+    paddingBottom: 84,
   },
-  panel: {
-    alignSelf: 'stretch',
-    gap: Spacing.four,
-    borderRadius: 8,
-    padding: Spacing.four,
+  heroVignette: {
+    position: "absolute",
+    inset: 0,
+    backgroundColor: "rgba(255, 0, 40, 0.04)",
   },
-  header: {
-    gap: Spacing.two,
+  heroLogoWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 48,
+    height: 220,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  title: {
-    fontSize: 44,
-    lineHeight: 48,
+  heroLogoAura: {
+    position: "absolute",
+    width: 410,
+    height: 214,
+    opacity: 0.28,
+    transform: [{ rotate: "-8deg" }, { translateY: 4 }, { scale: 1.04 }],
   },
-  subtitle: {
-    maxWidth: 460,
+  heroLogo: {
+    width: 394,
+    height: 206,
+    opacity: 0.98,
+    transform: [{ rotate: "-8deg" }],
   },
-  form: {
-    gap: Spacing.three,
+  formShell: {
+    marginTop: -44,
+    flex: 1,
+    backgroundColor: "#EEF1EF",
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
+    paddingTop: 32,
+    paddingHorizontal: 28,
+    paddingBottom: 40,
+    gap: 18,
   },
-  inputGroup: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 14,
-    overflow: 'hidden',
+  formHeader: {
+    gap: 6,
+  },
+  formTitle: {
+    color: AuthColors.hero,
+    fontSize: 32,
+    lineHeight: 36,
+  },
+  formCaption: {
+    color: "#727976",
+    marginBottom: 4,
+  },
+  backText: {
+    color: AuthColors.hero,
+  },
+  fields: {
+    gap: 14,
+  },
+  inputRow: {
+    minHeight: 54,
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+    paddingLeft: 18,
+    paddingRight: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   input: {
+    flex: 1,
     minHeight: 54,
-    paddingHorizontal: Spacing.three,
-    fontSize: 17,
-    fontWeight: '500',
+    borderWidth: 0,
+    backgroundColor: "transparent",
+    paddingHorizontal: 0,
   },
-  inputSeparator: {
-    height: StyleSheet.hairlineWidth,
-    marginLeft: Spacing.three,
+  forgotWrap: {
+    alignSelf: "flex-end",
   },
-  primaryButton: {
-    minHeight: 52,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1D6F5F',
+  forgotText: {
+    color: AuthColors.hero,
   },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
-  pressed: {
-    opacity: 0.72,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 4,
   },
   dividerLine: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
+    backgroundColor: "#D1D3D3",
   },
-  legal: {
-    textAlign: 'center',
+  dividerText: {
+    color: "#9EA3A1",
+  },
+  footerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 8,
+  },
+  footerText: {
+    color: "#8E9492",
+  },
+  footerLink: {
+    color: AuthColors.hero,
+  },
+  pressed: {
+    opacity: 0.76,
   },
 });
