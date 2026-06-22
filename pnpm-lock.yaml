@@ -174,6 +174,9 @@ importers:
       expo-image:
         specifier: ~55.0.11
         version: 55.0.11(expo@55.0.26)(react-native-web@0.21.2)(react-native@0.83.6)(react@19.2.0)
+      expo-image-picker:
+        specifier: ~55.0.20
+        version: 55.0.20(expo@55.0.26)
       expo-linking:
         specifier: ~55.0.15
         version: 55.0.15(expo@55.0.26)(react-native@0.83.6)(react@19.2.0)
@@ -204,6 +207,9 @@ importers:
       react-dom:
         specifier: 19.2.0
         version: 19.2.0(react@19.2.0)
+      react-hook-form:
+        specifier: ^7.80.0
+        version: 7.80.0(react@19.2.0)
       react-native:
         specifier: 0.83.6
         version: 0.83.6(@babel/core@7.29.7)(@types/react@19.2.15)(react@19.2.0)
@@ -6420,6 +6426,23 @@ packages:
       expo: 55.0.26(@babel/core@7.29.7)(@expo/dom-webview@55.0.6)(@expo/metro-runtime@55.0.11)(expo-router@55.0.16)(react-dom@19.2.0)(react-native-webview@13.16.0)(react-native-worklets@0.7.4)(react-native@0.83.6)(react@19.2.0)(typescript@5.9.3)
     dev: false
 
+  /expo-image-loader@55.0.1(expo@55.0.26):
+    resolution: {integrity: sha512-o8gCo1j59XpXDh0/llgNYPcnfecYQhafQAO0yw5pb+kukPizvNoEqea8tFQIIQmNYqxd6Ljgs7lLXed0gXpOdQ==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 55.0.26(@babel/core@7.29.7)(@expo/dom-webview@55.0.6)(@expo/metro-runtime@55.0.11)(expo-router@55.0.16)(react-dom@19.2.0)(react-native-webview@13.16.0)(react-native-worklets@0.7.4)(react-native@0.83.6)(react@19.2.0)(typescript@5.9.3)
+    dev: false
+
+  /expo-image-picker@55.0.20(expo@55.0.26):
+    resolution: {integrity: sha512-lfWt/0rPWdKz8AdDEGmGHZIJSNlVc720Dlx5bfou10FU16ZV5wAbTU63nm2jkXd8hbXke4a/2Ha1dzxCVA+LQQ==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 55.0.26(@babel/core@7.29.7)(@expo/dom-webview@55.0.6)(@expo/metro-runtime@55.0.11)(expo-router@55.0.16)(react-dom@19.2.0)(react-native-webview@13.16.0)(react-native-worklets@0.7.4)(react-native@0.83.6)(react@19.2.0)(typescript@5.9.3)
+      expo-image-loader: 55.0.1(expo@55.0.26)
+    dev: false
+
   /expo-image@55.0.11(expo@55.0.26)(react-native-web@0.21.2)(react-native@0.83.6)(react@19.2.0):
     resolution: {integrity: sha512-PVIBYQJW/h1f6Zb9xnoWlgfqyOPVm2yb6eo6ZogaKbvMrhb/Q/fiERbagi4oqmR6IPljWPEpkXXQyFBUh7TjpQ==}
     peerDependencies:
@@ -9771,6 +9794,15 @@ packages:
     engines: {node: '>=10'}
     peerDependencies:
       react: '>=17.0.0'
+    dependencies:
+      react: 19.2.0
+    dev: false
+
+  /react-hook-form@7.80.0(react@19.2.0):
+    resolution: {integrity: sha512-4P+fk6oXsxY+6xSj7Euhc2sumQD8zQqCuVHoJwoyp9EchP+IUW9OESB7uHFJOKsIBQ4MQqYE84INJFqUCYNoOg==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
     dependencies:
       react: 19.2.0
     dev: false

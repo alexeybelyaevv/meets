@@ -32,10 +32,10 @@ const items: NavigationItem[] = [
     icon: { ios: 'calendar', android: 'calendar_month', web: 'calendar_month' },
   },
   {
-    href: '/saved',
-    label: 'Saved',
-    match: '/saved',
-    icon: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
+    href: '/create',
+    label: 'Create',
+    match: '/create',
+    icon: { ios: 'plus', android: 'add', web: 'add' },
   },
   {
     href: '/profile',
