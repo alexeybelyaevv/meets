@@ -1,5 +1,1 @@
-import { Redirect } from 'expo-router';
-
-export default function ExploreScreen() {
-  return <Redirect href="/login" />;
-}
+export { default } from "@/screens/explore";
