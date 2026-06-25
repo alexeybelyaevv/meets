@@ -13,6 +13,11 @@ enum AuthProvider {
   TELEGRAM
 }
 
+enum EventPriceType {
+  FREE
+  PAID
+}
+
 model User {
   id             String          @id @default(uuid())
   email          String?         @unique
@@ -50,3 +55,27 @@ model RefreshToken {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model Event {
+  id                 String         @id @default(uuid())
+  title              String
+  description        String?
+  categories         String[]
+  photos             String[]       @default([])
+  startsAt           DateTime
+  locationName       String
+  locationAddress    String?
+  latitude           Float
+  longitude          Float
+  capacity           Int?
+  peopleAlreadyThere Int            @default(0)
+  priceType          EventPriceType @default(FREE)
+  priceAmount        Float?
+  currency           String         @default("EUR")
+  bringItems         String?
+  minAge             Int?
+  maxAge             Int?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([latitude, longitude])
+}

@@ -37,6 +37,8 @@ import {
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { apiFetch } from "@/lib/api";
+import type { CreateEventDto } from "@meets/shared";
 
 const Grapefruit = "#FF5A5F";
 const GrapefruitSoft = "#FFE6E3";
@@ -60,11 +62,10 @@ type EventFormValues = {
   locationAddress: string;
   locationLatitude: string;
   locationLongitude: string;
-  peopleNeeded: string;
+  capacity: string;
   peopleAlreadyThere: string;
   priceType: PriceType;
   priceAmount: string;
-  moneyToBring: string;
   bringItems: string;
   hasAgeLimit: boolean;
   minAge: number;
@@ -149,16 +150,69 @@ const defaultValues: EventFormValues = {
   locationAddress: "",
   locationLatitude: "48.1452",
   locationLongitude: "17.1164",
-  peopleNeeded: "8",
+  capacity: "8",
   peopleAlreadyThere: "1",
   priceType: "free",
   priceAmount: "",
-  moneyToBring: "",
   bringItems: "",
   hasAgeLimit: false,
   minAge: 18,
   maxAge: 35,
 };
+
+function toCreateEventDto(values: EventFormValues): CreateEventDto {
+  return {
+    title: values.title,
+    description: values.description || null,
+    categories: values.categories,
+    photos: values.photos,
+    startsAt: toStartsAt(values.date, values.time),
+    locationName: values.locationName,
+    locationAddress: values.locationAddress || null,
+    latitude:
+      Number(values.locationLatitude) || Number(defaultValues.locationLatitude),
+    longitude:
+      Number(values.locationLongitude) ||
+      Number(defaultValues.locationLongitude),
+    capacity: parseOptionalNumber(values.capacity),
+    peopleAlreadyThere: parseOptionalNumber(values.peopleAlreadyThere),
+    priceType: values.priceType,
+    priceAmount: parseMoneyAmount(values.priceAmount),
+    currency: "EUR",
+    bringItems: values.bringItems || null,
+    minAge: values.hasAgeLimit ? values.minAge : null,
+    maxAge: values.hasAgeLimit ? values.maxAge : null,
+  };
+}
+
+function toStartsAt(date: string, time: string) {
+  const dateValue = date.trim();
+  const timeValue = time.trim();
+
+  if (!dateValue || !timeValue) {
+    return "";
+  }
+
+  const isoLikeDate = /^\d{4}-\d{2}-\d{2}$/.test(dateValue);
+  const twentyFourHourTime = /^\d{2}:\d{2}$/.test(timeValue);
+
+  if (isoLikeDate && twentyFourHourTime) {
+    return new Date(`${dateValue}T${timeValue}:00`).toISOString();
+  }
+
+  const parsedDate = new Date(`${dateValue} ${timeValue}`);
+  return Number.isNaN(parsedDate.getTime()) ? "" : parsedDate.toISOString();
+}
+
+function parseOptionalNumber(value: string) {
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue) ? parsedValue : null;
+}
+
+function parseMoneyAmount(value: string) {
+  const parsedValue = Number(value.replace(",", ".").replace(/[^\d.]/g, ""));
+  return Number.isFinite(parsedValue) ? parsedValue : null;
+}
 
 function createLocationMapHtml(latitude: string, longitude: string) {
   const lat = Number(latitude) || 48.1452;
@@ -355,7 +409,8 @@ export default function CreateScreen() {
           };
 
           nextAddress =
-            result.display_name ?? `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            result.display_name ??
+            `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
         } catch {
           nextAddress = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
         }
@@ -383,9 +438,11 @@ export default function CreateScreen() {
 
     try {
       const centerLatitude =
-        Number(values.locationLatitude) || Number(defaultValues.locationLatitude);
+        Number(values.locationLatitude) ||
+        Number(defaultValues.locationLatitude);
       const centerLongitude =
-        Number(values.locationLongitude) || Number(defaultValues.locationLongitude);
+        Number(values.locationLongitude) ||
+        Number(defaultValues.locationLongitude);
       const amenityValues = getOsmAmenityValues(query);
       const escapedQuery = escapeOverpassRegex(query);
       const overpassAmenityClause =
@@ -494,7 +551,10 @@ export default function CreateScreen() {
 
       if (suggestions.length === 0) {
         if (options?.showAlert) {
-          Alert.alert("Location not found", "Try a more specific place or address.");
+          Alert.alert(
+            "Location not found",
+            "Try a more specific place or address.",
+          );
         }
         return;
       }
@@ -503,7 +563,10 @@ export default function CreateScreen() {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {
       if (options?.showAlert) {
-        Alert.alert("Location search failed", "Check connection and try again.");
+        Alert.alert(
+          "Location search failed",
+          "Check connection and try again.",
+        );
       }
     } finally {
       setLocationSearching(false);
@@ -529,11 +592,17 @@ export default function CreateScreen() {
       };
       const address = result.display_name ?? `${latitude}, ${longitude}`;
 
-      setValue("locationName", result.name || address.split(",")[0] || "Map point");
+      setValue(
+        "locationName",
+        result.name || address.split(",")[0] || "Map point",
+      );
       setValue("locationAddress", address);
     } catch {
       setValue("locationName", "Map point");
-      setValue("locationAddress", `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+      setValue(
+        "locationAddress",
+        `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`,
+      );
     }
   };
 
@@ -584,16 +653,27 @@ export default function CreateScreen() {
     setValue("photos", nextPhotos);
   };
 
-  const onSubmit = handleSubmit((formValues) => {
-    setCreated(true);
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  const onSubmit = handleSubmit(async (formValues) => {
+    const payload = toCreateEventDto(formValues);
 
-    if (Platform.OS === "web") {
-      console.log("Created event draft", formValues);
-      return;
+    try {
+      await apiFetch("/events", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      setCreated(true);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      if (Platform.OS === "web") {
+        console.log("Created event", payload);
+      }
+    } catch (error) {
+      Alert.alert(
+        "Could not create event",
+        error instanceof Error ? error.message : "Please try again.",
+      );
     }
-
-    Alert.alert("Draft ready", "Frontend flow collected the event details.");
   });
 
   if (created) {
@@ -829,7 +909,9 @@ export default function CreateScreen() {
                                   <Pressable
                                     key={category}
                                     accessibilityRole="button"
-                                    onPress={() => onChange([...value, category])}
+                                    onPress={() =>
+                                      onChange([...value, category])
+                                    }
                                     style={({ pressed }) => [
                                       styles.chip,
                                       pressed && styles.pressed,
@@ -869,9 +951,7 @@ export default function CreateScreen() {
                               <Pressable
                                 accessibilityRole="button"
                                 onPress={() =>
-                                  onChange(
-                                    value.filter((item) => item !== uri),
-                                  )
+                                  onChange(value.filter((item) => item !== uri))
                                 }
                                 style={({ pressed }) => [
                                   styles.photoRemoveButton,
@@ -936,7 +1016,7 @@ export default function CreateScreen() {
                       control={control}
                       label="Date"
                       name="date"
-                      placeholder="Fri, Jul 12"
+                      placeholder="2026-07-12"
                     />
                     <ControlledInput
                       control={control}
@@ -951,8 +1031,10 @@ export default function CreateScreen() {
                       originWhitelist={["*"]}
                       source={{
                         html: createLocationMapHtml(
-                          values.locationLatitude ?? defaultValues.locationLatitude,
-                          values.locationLongitude ?? defaultValues.locationLongitude,
+                          values.locationLatitude ??
+                            defaultValues.locationLatitude,
+                          values.locationLongitude ??
+                            defaultValues.locationLongitude,
                         ),
                         baseUrl: "https://basemaps.cartocdn.com",
                       }}
@@ -1120,8 +1202,8 @@ export default function CreateScreen() {
                     <ControlledInput
                       control={control}
                       keyboardType="number-pad"
-                      label="People needed"
-                      name="peopleNeeded"
+                      label="Capacity"
+                      name="capacity"
                       placeholder="8"
                     />
                     <ControlledInput
@@ -1176,15 +1258,9 @@ export default function CreateScreen() {
                       keyboardType="decimal-pad"
                       label="Price amount"
                       name="priceAmount"
-                      placeholder="10 EUR"
+                      placeholder="10"
                     />
                   )}
-                  <ControlledInput
-                    control={control}
-                    label="Money to bring"
-                    name="moneyToBring"
-                    placeholder="Optional, e.g. 20 EUR for food"
-                  />
                   <ControlledInput
                     control={control}
                     label="What to bring"
@@ -1308,7 +1384,7 @@ export default function CreateScreen() {
                       web: "groups",
                     }}
                     label="People"
-                    value={`${values.peopleAlreadyThere || 0}/${values.peopleNeeded || 0} already planned`}
+                    value={`${values.peopleAlreadyThere || 0}/${values.capacity || 0} already planned`}
                   />
                   <PreviewRow
                     icon={{
@@ -1330,11 +1406,7 @@ export default function CreateScreen() {
                       web: "backpack",
                     }}
                     label="Bring"
-                    value={
-                      values.bringItems ||
-                      values.moneyToBring ||
-                      "Nothing special"
-                    }
+                    value={values.bringItems || "Nothing special"}
                   />
                   <PreviewRow
                     icon={{

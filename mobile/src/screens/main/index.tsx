@@ -1,7 +1,7 @@
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 import { SymbolView } from "expo-symbols";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -29,6 +29,8 @@ import {
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { apiFetch } from "@/lib/api";
+import type { EventDto } from "@meets/shared";
 import { Search } from "./components/search";
 
 export const Grapefruit = "#FF5A5F";
@@ -39,7 +41,25 @@ export const WarmBorder = "#E8E2DF";
 export const Charcoal = "#201A1A";
 export const MutedText = "#766F6B";
 
-const featuredPlans = [
+type FeaturedPlan = {
+  id: string;
+  title: string;
+  venue: string;
+  meta: string;
+  tag: string;
+  price: string;
+  description: string;
+  host: string;
+  hostRole: string;
+  hostInitials: string;
+  attendeeCount: number;
+  capacity: number;
+  timeLabel: string;
+  latitude: number;
+  longitude: number;
+};
+
+const featuredPlans: FeaturedPlan[] = [
   {
     id: "sunset",
     title: "Sunset picnic by the Danube",
@@ -114,15 +134,16 @@ const featuredPlans = [
   },
 ];
 
-const mapPoints = JSON.stringify(
-  featuredPlans.map(({ id, latitude, longitude }) => ({
-    id,
-    latitude,
-    longitude,
-  })),
-);
+function createMapHtml(plans: FeaturedPlan[]) {
+  const mapPoints = JSON.stringify(
+    plans.map(({ id, latitude, longitude }) => ({
+      id,
+      latitude,
+      longitude,
+    })),
+  );
 
-const mapHtml = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -296,6 +317,49 @@ const mapHtml = `<!DOCTYPE html>
     </script>
   </body>
 </html>`;
+}
+
+function eventToFeaturedPlan(event: EventDto): FeaturedPlan {
+  const category = event.categories[0] ?? "Event";
+  const attendeeCount = event.peopleAlreadyThere ?? 0;
+  const capacity = event.capacity ?? Math.max(attendeeCount, 1);
+  const startsAt = new Date(event.startsAt);
+  const dateLabel = Number.isNaN(startsAt.getTime())
+    ? "Date"
+    : startsAt.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      });
+  const timeLabel = Number.isNaN(startsAt.getTime())
+    ? "Time"
+    : startsAt.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+  return {
+    id: event.id,
+    title: event.title,
+    venue: event.locationName,
+    meta: `${dateLabel} · ${timeLabel} · ${attendeeCount} going`,
+    tag: category,
+    price:
+      event.priceType === "free"
+        ? "Free"
+        : event.priceAmount
+          ? `${event.priceAmount} ${event.currency}`
+          : "Paid",
+    description: event.description || "No description yet.",
+    host: "Meets host",
+    hostRole: event.locationAddress || "Event organizer",
+    hostInitials: "MH",
+    attendeeCount,
+    capacity,
+    timeLabel: `${dateLabel}, ${timeLabel}`,
+    latitude: event.latitude,
+    longitude: event.longitude,
+  };
+}
 
 function useStaggeredFilterStyle(progress: SharedValue<number>, start: number) {
   const end = start + 0.28;
@@ -306,14 +370,20 @@ function useStaggeredFilterStyle(progress: SharedValue<number>, start: number) {
 }
 
 export default function MainScreen() {
+  const [events, setEvents] = useState<EventDto[]>([]);
+  const [eventsError, setEventsError] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const filtersProgress = useSharedValue(0);
   const filtersContentProgress = useSharedValue(0);
   const insets = useSafeAreaInsets();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const selectedPlan =
-    featuredPlans.find((plan) => plan.id === selectedPlanId) ?? null;
+  const plans = useMemo(
+    () => (events.length > 0 ? events.map(eventToFeaturedPlan) : featuredPlans),
+    [events],
+  );
+  const mapHtml = useMemo(() => createMapHtml(plans), [plans]);
+  const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) ?? null;
   const topOverlayOffset = Math.max(insets.top + Spacing.two, 52);
   const drawerTopInset = topOverlayOffset + 58 + 16;
   const expandedDrawerSnapPoint = Math.max(220, windowHeight - drawerTopInset);
@@ -342,6 +412,30 @@ export default function MainScreen() {
     ],
     [insets.bottom],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    apiFetch<EventDto[]>("/events")
+      .then((nextEvents) => {
+        if (!cancelled) {
+          setEvents(nextEvents);
+          setEventsError(null);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setEventsError(
+            error instanceof Error ? error.message : "Could not load events",
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleMapMessage = (event: WebViewMessageEvent) => {
     try {
       const message = JSON.parse(event.nativeEvent.data) as {
@@ -352,7 +446,7 @@ export default function MainScreen() {
       if (
         message.type === "selectPlan" &&
         typeof message.id === "string" &&
-        featuredPlans.some((plan) => plan.id === message.id)
+        plans.some((plan) => plan.id === message.id)
       ) {
         setSelectedPlanId(message.id);
       }
@@ -696,12 +790,12 @@ export default function MainScreen() {
                     Nearby plans
                   </ThemedText>
                   <ThemedText type="small" style={styles.drawerSubtitle}>
-                    Fake listings for layout only
+                    {eventsError ? "Showing local examples" : "Live event feed"}
                   </ThemedText>
                 </View>
                 <View style={styles.countPill}>
                   <ThemedText type="smallBold" style={styles.countText}>
-                    {featuredPlans.length} near
+                    {plans.length} near
                   </ThemedText>
                 </View>
               </View>
@@ -710,9 +804,10 @@ export default function MainScreen() {
                 contentContainerStyle={planListStyle}
                 showsVerticalScrollIndicator={false}
               >
-                {featuredPlans.map((plan) => (
+                {plans.map((plan) => (
                   <Pressable
                     key={plan.id}
+                    onPress={() => setSelectedPlanId(plan.id)}
                     style={({ pressed }) => [
                       styles.planCard,
                       pressed && styles.pressed,
