@@ -7,7 +7,7 @@ import {
   MutedText,
   WarmBorder,
   WarmSurface,
-} from "../index";
+} from "../styles";
 import { ThemedText } from "@/components/themed-text";
 import { Spacing } from "@/constants/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
