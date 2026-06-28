@@ -1,0 +1,267 @@
+import { StyleSheet } from "react-native";
+import { MaxContentWidth, Spacing } from "@/constants/theme";
+import {
+  Charcoal,
+  Grapefruit,
+  GrapefruitSoft,
+  MutedText,
+  WarmBorder,
+  WarmGray,
+  WarmSurface,
+} from "@/screens/main/styles";
+
+export const profileStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    backgroundColor: WarmGray,
+  },
+  screen: {
+    flex: 1,
+    width: "100%",
+    maxWidth: MaxContentWidth,
+  },
+  content: {
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.two,
+    gap: Spacing.three,
+  },
+  hero: {
+    borderRadius: 28,
+    padding: Spacing.three,
+    gap: Spacing.three,
+    backgroundColor: WarmSurface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: WarmBorder,
+  },
+  heroTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.three,
+  },
+  avatarWrap: {
+    position: "relative",
+  },
+  avatar: {
+    width: 92,
+    height: 92,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Grapefruit,
+  },
+  avatarText: {
+    color: WarmSurface,
+    fontSize: 28,
+  },
+  photoButton: {
+    position: "absolute",
+    right: -6,
+    bottom: -6,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: WarmSurface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: WarmBorder,
+  },
+  heroCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: Spacing.half,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.two,
+  },
+  name: {
+    flex: 1,
+    color: Charcoal,
+    fontSize: 30,
+    lineHeight: 36,
+  },
+  settingsButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: WarmGray,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: WarmBorder,
+  },
+  role: {
+    color: Grapefruit,
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.one,
+  },
+  location: {
+    color: MutedText,
+  },
+  bio: {
+    color: Charcoal,
+    lineHeight: 22,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: Spacing.two,
+  },
+  stat: {
+    flex: 1,
+    minHeight: 70,
+    borderRadius: 20,
+    justifyContent: "center",
+    paddingHorizontal: Spacing.two,
+    backgroundColor: GrapefruitSoft,
+  },
+  statValue: {
+    color: Grapefruit,
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  statLabel: {
+    color: MutedText,
+    fontSize: 12,
+  },
+  section: {
+    borderRadius: 24,
+    padding: Spacing.three,
+    gap: Spacing.two,
+    backgroundColor: WarmSurface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: WarmBorder,
+  },
+  sectionTitle: {
+    color: Charcoal,
+    fontWeight: "800",
+  },
+  detailRow: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.three,
+  },
+  detailLabel: {
+    color: MutedText,
+  },
+  detailValue: {
+    flex: 1,
+    color: Charcoal,
+    textAlign: "right",
+  },
+  socialRow: {
+    flexDirection: "row",
+    gap: Spacing.two,
+  },
+  socialButton: {
+    flex: 1,
+    minHeight: 58,
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.two,
+    backgroundColor: WarmGray,
+  },
+  socialIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: GrapefruitSoft,
+  },
+  socialTextBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+  socialLabel: {
+    color: Charcoal,
+    fontSize: 12,
+  },
+  socialHandle: {
+    color: MutedText,
+    fontSize: 12,
+  },
+  chips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.two,
+  },
+  chip: {
+    minHeight: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    paddingHorizontal: Spacing.three,
+    backgroundColor: GrapefruitSoft,
+  },
+  chipText: {
+    color: Grapefruit,
+    fontSize: 12,
+  },
+  trustRow: {
+    minHeight: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+  },
+  trustIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: GrapefruitSoft,
+  },
+  trustText: {
+    flex: 1,
+    color: Charcoal,
+  },
+  eventCard: {
+    minHeight: 82,
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+    padding: Spacing.two,
+    backgroundColor: WarmGray,
+  },
+  eventDate: {
+    width: 58,
+    height: 58,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: WarmSurface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: WarmBorder,
+  },
+  eventDateText: {
+    color: Grapefruit,
+    textAlign: "center",
+    fontSize: 12,
+  },
+  eventCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: Spacing.half,
+  },
+  eventTitle: {
+    color: Charcoal,
+  },
+  eventMeta: {
+    color: MutedText,
+  },
+  pressed: {
+    opacity: 0.72,
+  },
+});

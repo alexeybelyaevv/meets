@@ -81,10 +81,6 @@ export function FiltersOverlay({
   const filtersSubmitAnimatedStyle = useAnimatedStyle(() => ({
     opacity: interpolate(filtersContentProgress.value, [0, 0.72, 1], [0, 0, 1]),
   }));
-  const filtersHeroAnimatedStyle = useStaggeredFilterStyle(
-    filtersContentProgress,
-    0.06,
-  );
   const whenSectionAnimatedStyle = useStaggeredFilterStyle(
     filtersContentProgress,
     0.16,
