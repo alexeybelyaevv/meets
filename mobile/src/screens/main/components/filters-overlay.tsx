@@ -14,7 +14,10 @@ type FiltersOverlayProps = {
   filtersContentProgress: SharedValue<number>;
   filtersExpandedHeight: number;
   filtersProgress: SharedValue<number>;
+  searchSubtitle?: string;
+  searchTitle?: string;
   searchBarWidth: number;
+  submitLabel?: string;
   topOverlayOffset: number;
 };
 
@@ -23,7 +26,10 @@ export function FiltersOverlay({
   filtersContentProgress,
   filtersExpandedHeight,
   filtersProgress,
+  searchSubtitle = "Anywhere · any time · filters",
+  searchTitle = "Search plans",
   searchBarWidth,
+  submitLabel = "Show 24 plans",
   topOverlayOffset,
 }: FiltersOverlayProps) {
   const filtersMorphSurfaceAnimatedStyle = useAnimatedStyle(() => ({
@@ -113,7 +119,7 @@ export function FiltersOverlay({
         <Animated.View
           style={[styles.filtersMorphBarGhost, filtersBarGhostAnimatedStyle]}
         >
-          <SearchGhost />
+          <SearchGhost title={searchTitle} subtitle={searchSubtitle} />
         </Animated.View>
       </Animated.View>
       <Animated.View
@@ -158,7 +164,6 @@ export function FiltersOverlay({
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <FilterHero animatedStyle={filtersHeroAnimatedStyle} />
           <FilterChipsSection
             animatedStyle={whenSectionAnimatedStyle}
             labels={["Today", "Tomorrow", "This weekend", "Any time"]}
@@ -282,7 +287,7 @@ export function FiltersOverlay({
               weight="bold"
             />
             <ThemedText type="smallBold" style={styles.filtersSubmitText}>
-              Show 24 plans
+              {submitLabel}
             </ThemedText>
           </Pressable>
           <View style={{ height: 18 }} />
@@ -292,7 +297,7 @@ export function FiltersOverlay({
   );
 }
 
-function SearchGhost() {
+function SearchGhost({ subtitle, title }: { subtitle: string; title: string }) {
   return (
     <>
       <View style={styles.searchIconWrap}>
@@ -309,10 +314,10 @@ function SearchGhost() {
       </View>
       <View style={styles.searchTextBlock}>
         <ThemedText type="default" style={styles.searchTitle}>
-          Search plans
+          {title}
         </ThemedText>
         <ThemedText type="small" style={styles.searchSubtitle}>
-          Anywhere · any time · filters
+          {subtitle}
         </ThemedText>
       </View>
       <View style={styles.searchTuneWrap}>
@@ -328,47 +333,6 @@ function SearchGhost() {
         />
       </View>
     </>
-  );
-}
-
-function FilterHero({ animatedStyle }: { animatedStyle: object }) {
-  return (
-    <Animated.View style={[styles.filterHeroPanel, animatedStyle]}>
-      <View style={styles.filterHeroTop}>
-        <View style={styles.filterHeroIcon}>
-          <SymbolView
-            name={{
-              ios: "location.fill",
-              android: "location_on",
-              web: "location_on",
-            }}
-            size={22}
-            tintColor={WarmSurface}
-            weight="bold"
-          />
-        </View>
-        <View style={styles.filterHeroCopy}>
-          <ThemedText type="smallBold" style={styles.filterEyebrow}>
-            Explore nearby
-          </ThemedText>
-          <ThemedText type="subtitle" style={styles.filterSearchTitle}>
-            Bratislava
-          </ThemedText>
-        </View>
-      </View>
-      <ThemedText type="small" style={styles.filterSearchMeta}>
-        Handpicked plans around Old Town, the Danube, and Sky Park.
-      </ThemedText>
-      <View style={styles.filterHeroPills}>
-        {["Tonight", "Under €10", "Social"].map((label) => (
-          <View key={label} style={styles.filterHeroPill}>
-            <ThemedText type="smallBold" style={styles.filterHeroPillText}>
-              {label}
-            </ThemedText>
-          </View>
-        ))}
-      </View>
-    </Animated.View>
   );
 }
 

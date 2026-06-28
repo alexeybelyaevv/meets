@@ -21,14 +21,14 @@ type NavigationItem = {
 const items: NavigationItem[] = [
   {
     href: '/main',
-    label: 'Home',
+    label: 'Map',
     match: '/main',
-    icon: { ios: 'house.fill', android: 'home', web: 'home' },
+    icon: { ios: 'map.fill', android: 'map', web: 'map' },
   },
   {
-    href: '/trips',
-    label: 'Trips',
-    match: '/trips',
+    href: '/events',
+    label: 'Events',
+    match: '/events',
     icon: { ios: 'calendar', android: 'calendar_month', web: 'calendar_month' },
   },
   {
