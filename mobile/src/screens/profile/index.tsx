@@ -1,4 +1,5 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { useRouter } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -38,6 +39,8 @@ export function ProfileScreen() {
 }
 
 function ProfileHero() {
+  const router = useRouter();
+
   return (
     <View style={styles.hero}>
       <View style={styles.heroTop}>
@@ -72,6 +75,7 @@ function ProfileHero() {
             <Pressable
               accessibilityLabel="Open profile settings"
               accessibilityRole="button"
+              onPress={() => router.push("/profile/settings")}
               style={({ pressed }) => [
                 styles.settingsButton,
                 pressed && styles.pressed,

@@ -264,4 +264,136 @@ export const profileStyles = StyleSheet.create({
   pressed: {
     opacity: 0.72,
   },
+  settingsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.three,
+  },
+  settingsTitleBlock: {
+    flex: 1,
+    minWidth: 0,
+    gap: Spacing.half,
+  },
+  settingsTitle: {
+    color: Charcoal,
+    fontSize: 30,
+    lineHeight: 36,
+  },
+  settingsSubtitle: {
+    color: MutedText,
+  },
+  headerIconButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: WarmSurface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: WarmBorder,
+  },
+  settingsContent: {
+    paddingHorizontal: Spacing.three,
+    gap: Spacing.three,
+  },
+  formSection: {
+    borderRadius: 24,
+    padding: Spacing.three,
+    gap: Spacing.three,
+    backgroundColor: WarmSurface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: WarmBorder,
+  },
+  fieldGroup: {
+    gap: Spacing.two,
+  },
+  fieldLabel: {
+    color: Charcoal,
+  },
+  input: {
+    minHeight: 54,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: WarmBorder,
+    backgroundColor: WarmGray,
+    color: Charcoal,
+    fontSize: 16,
+    fontWeight: "600",
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+  },
+  textArea: {
+    minHeight: 116,
+    textAlignVertical: "top",
+  },
+  settingsPhotoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.three,
+  },
+  settingsAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Grapefruit,
+  },
+  settingsAvatarText: {
+    color: WarmSurface,
+    fontSize: 22,
+  },
+  photoCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: Spacing.half,
+  },
+  photoAction: {
+    alignSelf: "flex-start",
+    minHeight: 34,
+    borderRadius: 17,
+    justifyContent: "center",
+    paddingHorizontal: Spacing.three,
+    backgroundColor: GrapefruitSoft,
+  },
+  photoActionText: {
+    color: Grapefruit,
+    fontSize: 12,
+  },
+  selectedChip: {
+    backgroundColor: Grapefruit,
+  },
+  selectedChipText: {
+    color: WarmSurface,
+  },
+  settingsNote: {
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+    padding: Spacing.three,
+    backgroundColor: GrapefruitSoft,
+  },
+  settingsNoteText: {
+    flex: 1,
+    color: Charcoal,
+  },
+  saveBar: {
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.one,
+  },
+  saveButton: {
+    minHeight: 54,
+    borderRadius: 27,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Grapefruit,
+  },
+  saveButtonText: {
+    color: WarmSurface,
+  },
 });
