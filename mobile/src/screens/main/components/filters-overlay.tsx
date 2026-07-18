@@ -1,4 +1,4 @@
-import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { SymbolView } from "expo-symbols";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import Animated, {
@@ -14,6 +14,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { ThemedText } from "@/components/themed-text";
 import { Spacing } from "@/constants/theme";
+import { EVENT_CATEGORY_OPTIONS } from "@/features/events/data/event-categories";
 import {
   Charcoal,
   Grapefruit,
@@ -1040,105 +1041,6 @@ function SearchGhost({
   );
 }
 
-const CATEGORY_OPTIONS: {
-  icon: SymbolViewProps["name"];
-  id: string;
-  label: string;
-}[] = [
-  {
-    id: "coffee-chat",
-    label: "Coffee & Chat",
-    icon: {
-      ios: "cup.and.saucer.fill",
-      android: "local_cafe",
-      web: "local_cafe",
-    },
-  },
-  {
-    id: "walk",
-    label: "Walk",
-    icon: {
-      ios: "figure.walk",
-      android: "directions_walk",
-      web: "directions_walk",
-    },
-  },
-  {
-    id: "food",
-    label: "Food",
-    icon: { ios: "fork.knife", android: "restaurant", web: "restaurant" },
-  },
-  {
-    id: "drinks",
-    label: "Drinks",
-    icon: { ios: "wineglass.fill", android: "local_bar", web: "local_bar" },
-  },
-  {
-    id: "party-nightlife",
-    label: "Party & Nightlife",
-    icon: {
-      ios: "party.popper.fill",
-      android: "nightlife",
-      web: "nightlife",
-    },
-  },
-  {
-    id: "sports",
-    label: "Sports",
-    icon: { ios: "figure.run", android: "sports_soccer", web: "sports_soccer" },
-  },
-  {
-    id: "games",
-    label: "Games",
-    icon: {
-      ios: "gamecontroller.fill",
-      android: "sports_esports",
-      web: "sports_esports",
-    },
-  },
-  {
-    id: "culture-events",
-    label: "Culture & Events",
-    icon: {
-      ios: "ticket.fill",
-      android: "local_activity",
-      web: "local_activity",
-    },
-  },
-  {
-    id: "study-coworking",
-    label: "Study & Coworking",
-    icon: {
-      ios: "laptopcomputer",
-      android: "laptop",
-      web: "laptop",
-    },
-  },
-  {
-    id: "outdoor",
-    label: "Outdoor",
-    icon: { ios: "leaf.fill", android: "forest", web: "forest" },
-  },
-  {
-    id: "networking",
-    label: "Networking",
-    icon: {
-      ios: "person.3.fill",
-      android: "groups",
-      web: "groups",
-    },
-  },
-  {
-    id: "other",
-    label: "Other",
-    icon: {
-      ios: "square.grid.2x2.fill",
-      android: "category",
-      web: "category",
-    },
-  },
-];
-
 function CategoryFilterSection({
   animatedStyle,
   onChange,
@@ -1199,7 +1101,7 @@ function CategoryFilterSection({
         </Animated.View>
       </View>
       <View style={styles.categoryGrid}>
-        {CATEGORY_OPTIONS.map((category) => (
+        {EVENT_CATEGORY_OPTIONS.map((category) => (
           <CategoryOption
             category={category}
             key={category.id}
@@ -1217,7 +1119,7 @@ function CategoryOption({
   onPress,
   selected,
 }: {
-  category: (typeof CATEGORY_OPTIONS)[number];
+  category: (typeof EVENT_CATEGORY_OPTIONS)[number];
   onPress: () => void;
   selected: boolean;
 }) {
@@ -1475,7 +1377,7 @@ export function getFilterSummary(
 
   if (filters.categoryIds.length === 1) {
     parts.push(
-      CATEGORY_OPTIONS.find(
+      EVENT_CATEGORY_OPTIONS.find(
         (category) => category.id === filters.categoryIds[0],
       )?.label ?? "1 category",
     );

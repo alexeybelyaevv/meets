@@ -1,6 +1,6 @@
 import type { SymbolViewProps } from "expo-symbols";
 
-export type PriceType = "free" | "paid";
+export type PriceType = "free" | "pay-on-site" | "host-fee";
 
 export type EventFormValues = {
   title: string;
@@ -18,9 +18,6 @@ export type EventFormValues = {
   priceType: PriceType;
   priceAmount: string;
   bringItems: string;
-  hasAgeLimit: boolean;
-  minAge: number;
-  maxAge: number;
 };
 
 export type Step = {

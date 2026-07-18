@@ -1,8 +1,14 @@
 import type { EventDto } from "@meets/shared";
+import { EVENT_CATEGORY_OPTIONS } from "@/features/events/data/event-categories";
 import type { FeaturedPlan } from "../types";
 
 export function eventToFeaturedPlan(event: EventDto): FeaturedPlan {
-  const category = event.categories[0] ?? "Event";
+  const categoryValue = event.categories[0];
+  const category =
+    EVENT_CATEGORY_OPTIONS.find((option) => option.id === categoryValue)
+      ?.label ??
+    categoryValue ??
+    "Event";
   const attendeeCount = event.peopleAlreadyThere ?? 0;
   const capacity = event.capacity ?? Math.max(attendeeCount, 1);
   const startsAt = new Date(event.startsAt);

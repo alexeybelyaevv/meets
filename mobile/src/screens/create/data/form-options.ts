@@ -35,28 +35,10 @@ export const steps: Step[] = [
   },
 ];
 
-export const categories = [
-  "Outdoor",
-  "Food",
-  "Sport",
-  "Culture",
-  "Games",
-  "Study",
-  "Party",
-  "Other",
-];
-
-export const agePresets = [
-  { label: "16+", minAge: 16, maxAge: 35 },
-  { label: "18+", minAge: 18, maxAge: 35 },
-  { label: "21+", minAge: 21, maxAge: 35 },
-  { label: "30+", minAge: 30, maxAge: 55 },
-];
-
 export const defaultValues: EventFormValues = {
   title: "",
   description: "",
-  categories: ["Outdoor"],
+  categories: ["outdoor"],
   photos: [],
   date: "",
   time: "",
@@ -69,7 +51,4 @@ export const defaultValues: EventFormValues = {
   priceType: "free",
   priceAmount: "",
   bringItems: "",
-  hasAgeLimit: false,
-  minAge: 18,
-  maxAge: 35,
 };

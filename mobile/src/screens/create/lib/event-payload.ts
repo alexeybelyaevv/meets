@@ -18,12 +18,15 @@ export function toCreateEventDto(values: EventFormValues): CreateEventDto {
       Number(defaultValues.locationLongitude),
     capacity: parseOptionalNumber(values.capacity),
     peopleAlreadyThere: parseOptionalNumber(values.peopleAlreadyThere),
-    priceType: values.priceType,
-    priceAmount: parseMoneyAmount(values.priceAmount),
+    priceType: values.priceType === "free" ? "free" : "paid",
+    priceAmount:
+      values.priceType === "host-fee"
+        ? parseMoneyAmount(values.priceAmount)
+        : null,
     currency: "EUR",
     bringItems: values.bringItems || null,
-    minAge: values.hasAgeLimit ? values.minAge : null,
-    maxAge: values.hasAgeLimit ? values.maxAge : null,
+    minAge: null,
+    maxAge: null,
   };
 }
 
@@ -52,6 +55,12 @@ function parseOptionalNumber(value: string) {
 }
 
 function parseMoneyAmount(value: string) {
-  const parsedValue = Number(value.replace(",", ".").replace(/[^\d.]/g, ""));
+  const normalizedValue = value.replace(",", ".").replace(/[^\d.]/g, "");
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  const parsedValue = Number(normalizedValue);
   return Number.isFinite(parsedValue) ? parsedValue : null;
 }
