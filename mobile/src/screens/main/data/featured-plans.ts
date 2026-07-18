@@ -42,7 +42,7 @@ export const featuredPlans: FeaturedPlan[] = [
     title: "Small gallery walk",
     venue: "Gallery Nedbalka",
     meta: "Friday · 18:00 · 16 going",
-    tag: "Culture",
+    tag: "Culture & Events",
     price: "€7",
     description:
       "A slow gallery walk with a quick drink after. No art background needed, just curiosity and a comfortable pace.",
@@ -60,7 +60,7 @@ export const featuredPlans: FeaturedPlan[] = [
     title: "Rooftop board games",
     venue: "Sky Park",
     meta: "Saturday · 20:00 · 12 going",
-    tag: "Social",
+    tag: "Games",
     price: "€5",
     description:
       "Casual board games on the rooftop. We will keep the games light, social, and beginner friendly.",

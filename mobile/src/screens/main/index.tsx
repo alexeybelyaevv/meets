@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import {
   Easing,
@@ -25,11 +25,13 @@ import {
 } from "./components/filters-overlay";
 import { PlansDrawer } from "./components/plans-drawer";
 import { Search } from "./components/search";
+import { testEventPinImageDataUrls } from "./data/event-pin-images";
 import { featuredPlans } from "./data/featured-plans";
 import { eventToFeaturedPlan } from "./lib/event-to-featured-plan";
 import { createMapHtml } from "./lib/map-html";
 
 export default function MainScreen() {
+  const mapRef = useRef<WebView>(null);
   const [events, setEvents] = useState<EventDto[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [filters, setFilters] = useState(createDefaultFilterState);
@@ -43,7 +45,10 @@ export default function MainScreen() {
     () => (events.length > 0 ? events.map(eventToFeaturedPlan) : featuredPlans),
     [events],
   );
-  const mapHtml = useMemo(() => createMapHtml(plans), [plans]);
+  const mapHtml = useMemo(
+    () => createMapHtml(plans, testEventPinImageDataUrls),
+    [plans],
+  );
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) ?? null;
   const activeFilterCount = getActiveFilterCount(filters);
   const filterSummary = getFilterSummary(filters);
@@ -109,6 +114,19 @@ export default function MainScreen() {
       // Ignore messages not intended for this screen.
     }
   };
+  const syncMapSelection = useCallback(() => {
+    mapRef.current?.postMessage(
+      JSON.stringify({
+        id: selectedPlanId,
+        type: "setSelectedPlan",
+      }),
+    );
+  }, [selectedPlanId]);
+
+  useEffect(() => {
+    syncMapSelection();
+  }, [syncMapSelection]);
+
   const openFilters = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setFiltersOpen(true);
@@ -156,6 +174,7 @@ export default function MainScreen() {
       <View style={styles.screen}>
         <View style={styles.mapLayer}>
           <WebView
+            ref={mapRef}
             originWhitelist={["*"]}
             source={{ html: mapHtml, baseUrl: "https://basemaps.cartocdn.com" }}
             javaScriptEnabled
@@ -163,6 +182,7 @@ export default function MainScreen() {
             startInLoadingState
             mixedContentMode="always"
             allowsInlineMediaPlayback
+            onLoadEnd={syncMapSelection}
             onMessage={handleMapMessage}
             style={styles.map}
           />
