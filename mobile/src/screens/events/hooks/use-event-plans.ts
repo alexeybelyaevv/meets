@@ -4,8 +4,13 @@ import type { EventDto } from "@meets/shared";
 import { featuredPlans } from "@/screens/main/data/featured-plans";
 import { eventToFeaturedPlan } from "@/screens/main/lib/event-to-featured-plan";
 import type { FeaturedPlan } from "@/screens/main/types";
+import {
+  APP_INTL_LOCALES,
+  useLocalization,
+} from "@/features/localization/localization";
 
 export function useEventPlans() {
+  const { locale, t } = useLocalization();
   const [events, setEvents] = useState<EventDto[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +28,7 @@ export function useEventPlans() {
       .catch((error) => {
         if (!cancelled) {
           setEventsError(
-            error instanceof Error ? error.message : "Could not load events",
+            error instanceof Error ? error.message : t("events.loadError"),
           );
         }
       })
@@ -36,11 +41,19 @@ export function useEventPlans() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const plans = useMemo<FeaturedPlan[]>(
-    () => (events.length > 0 ? events.map(eventToFeaturedPlan) : featuredPlans),
-    [events],
+    () =>
+      events.length > 0
+        ? events.map((event) =>
+            eventToFeaturedPlan(event, {
+              intlLocale: APP_INTL_LOCALES[locale],
+              t,
+            }),
+          )
+        : featuredPlans,
+    [events, locale, t],
   );
 
   return {

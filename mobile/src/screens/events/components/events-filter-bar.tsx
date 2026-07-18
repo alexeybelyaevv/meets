@@ -4,6 +4,7 @@ import Animated, { LinearTransition } from "react-native-reanimated";
 import { ThemedText } from "@/components/themed-text";
 import { Grapefruit, WarmSurface } from "@/screens/main/styles";
 import { eventsStyles as styles } from "../styles";
+import { useLocalization } from "@/features/localization/localization";
 
 type EventsFilterBarProps = {
   activeFilterCount: number;
@@ -18,12 +19,13 @@ export function EventsFilterBar({
   onOpenFilters,
   top,
 }: EventsFilterBarProps) {
+  const { t } = useLocalization();
   const hasActiveFilters = activeFilterCount > 0;
 
   return (
     <View style={[styles.searchRow, { top }]}>
       <Pressable
-        accessibilityLabel={`Open filters. ${filterSummary}`}
+        accessibilityLabel={t("filters.openA11y", { summary: filterSummary })}
         accessibilityRole="button"
         onPress={onOpenFilters}
         style={({ pressed }) => [
@@ -45,7 +47,7 @@ export function EventsFilterBar({
         </View>
         <View style={styles.searchTextBlock}>
           <ThemedText type="default" style={styles.searchTitle}>
-            Events nearby
+            {t("filters.eventsNearby")}
           </ThemedText>
           <ThemedText
             numberOfLines={1}

@@ -5,6 +5,12 @@ import Animated, { Easing, FadeInDown } from "react-native-reanimated";
 import { ThemedText } from "@/components/themed-text";
 import type { FeaturedPlan } from "../types";
 import { Charcoal, Grapefruit, styles } from "../styles";
+import { useLocalization } from "@/features/localization/localization";
+import {
+  localizeEventCategory,
+  localizeEventPrice,
+  localizeEventTimeLabel,
+} from "@/features/events/lib/event-display";
 
 type PlanDetailHeaderProps = {
   closeLabel?: string;
@@ -13,15 +19,18 @@ type PlanDetailHeaderProps = {
 };
 
 export function PlanDetailHeader({
-  closeLabel = "Close plan details",
+  closeLabel,
   onClose,
   plan,
 }: PlanDetailHeaderProps) {
+  const { t } = useLocalization();
+  const timeLabel = localizeEventTimeLabel(plan.timeLabel, t);
+
   return (
     <View style={styles.detailHeaderFixed}>
       <View style={styles.detailHeaderTitleBlock}>
         <ThemedText type="smallBold" style={styles.planTag}>
-          {plan.timeLabel}
+          {timeLabel}
         </ThemedText>
         <ThemedText type="subtitle" style={styles.detailTitle} numberOfLines={2}>
           {plan.title}
@@ -31,7 +40,7 @@ export function PlanDetailHeader({
         </ThemedText>
       </View>
       <Pressable
-        accessibilityLabel={closeLabel}
+        accessibilityLabel={closeLabel ?? t("events.closeDetailsA11y")}
         accessibilityRole="button"
         hitSlop={10}
         onPress={onClose}
@@ -62,6 +71,9 @@ export function PlanDetailBody({
   imageSource: number;
   plan: FeaturedPlan;
 }) {
+  const { t } = useLocalization();
+  const timeLabel = localizeEventTimeLabel(plan.timeLabel, t);
+
   return (
     <>
       <Animated.View
@@ -80,12 +92,12 @@ export function PlanDetailBody({
         <View style={styles.detailPhotoBadges}>
           <View style={styles.detailPhotoBadge}>
             <ThemedText type="smallBold" style={styles.detailPhotoBadgeText}>
-              {plan.tag}
+              {localizeEventCategory(plan.tag, t)}
             </ThemedText>
           </View>
           <View style={styles.detailPriceBadge}>
             <ThemedText type="smallBold" style={styles.detailPriceBadgeText}>
-              {plan.price}
+              {localizeEventPrice(plan.price, t)}
             </ThemedText>
           </View>
         </View>
@@ -104,13 +116,13 @@ export function PlanDetailBody({
         <View style={styles.detailStatsRow}>
           <DetailStat
             icon={{ ios: "person.2.fill", android: "groups", web: "groups" }}
-            label="people going"
+            label={t("events.peopleGoing")}
             value={`${plan.attendeeCount}/${plan.capacity}`}
           />
           <DetailStat
             icon={{ ios: "clock.fill", android: "schedule", web: "schedule" }}
-            label="starts"
-            value={plan.timeLabel}
+            label={t("events.starts")}
+            value={timeLabel}
           />
         </View>
 
@@ -122,7 +134,7 @@ export function PlanDetailBody({
           </View>
           <View style={styles.hostTextBlock}>
             <ThemedText type="small" style={styles.hostEyebrow}>
-              Hosted by
+              {t("events.hostedBy")}
             </ThemedText>
             <ThemedText type="default" style={styles.hostName}>
               {plan.host}
@@ -146,7 +158,7 @@ export function PlanDetailBody({
             ]}
           >
             <ThemedText type="smallBold" style={styles.primaryActionText}>
-              Join plan
+              {t("events.joinPlan")}
             </ThemedText>
           </Pressable>
           <Pressable

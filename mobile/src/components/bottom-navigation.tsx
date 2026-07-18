@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useLocalization } from '@/features/localization/localization';
 
 const Grapefruit = '#FF5A5F';
 const GrapefruitSoft = '#FFE6E3';
@@ -13,7 +14,7 @@ const MutedText = '#766F6B';
 
 type NavigationItem = {
   href: Href;
-  label: string;
+  labelKey: 'nav.map' | 'nav.events' | 'nav.create' | 'nav.profile';
   match: string;
   icon: SymbolViewProps['name'];
 };
@@ -21,25 +22,25 @@ type NavigationItem = {
 const items: NavigationItem[] = [
   {
     href: '/main',
-    label: 'Map',
+    labelKey: 'nav.map',
     match: '/main',
     icon: { ios: 'map.fill', android: 'map', web: 'map' },
   },
   {
     href: '/events',
-    label: 'Events',
+    labelKey: 'nav.events',
     match: '/events',
     icon: { ios: 'calendar', android: 'calendar_month', web: 'calendar_month' },
   },
   {
     href: '/create',
-    label: 'Create',
+    labelKey: 'nav.create',
     match: '/create',
     icon: { ios: 'plus', android: 'add', web: 'add' },
   },
   {
     href: '/profile',
-    label: 'Profile',
+    labelKey: 'nav.profile',
     match: '/profile',
     icon: { ios: 'person.crop.circle.fill', android: 'account_circle', web: 'account_circle' },
   },
@@ -49,6 +50,7 @@ export function BottomNavigation() {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const { t } = useLocalization();
 
   return (
     <View pointerEvents="box-none" style={styles.overlay}>
@@ -69,6 +71,7 @@ export function BottomNavigation() {
           return (
             <Pressable
               key={item.match}
+              accessibilityLabel={t(item.labelKey)}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               onPress={() => {
@@ -84,7 +87,7 @@ export function BottomNavigation() {
                 type="smallBold"
                 style={[styles.label, { color: tintColor }]}
                 numberOfLines={1}>
-                {item.label}
+                {t(item.labelKey)}
               </ThemedText>
             </Pressable>
           );

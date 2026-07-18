@@ -16,6 +16,13 @@ import { ThemedText } from "@/components/themed-text";
 import { Spacing } from "@/constants/theme";
 import { EVENT_CATEGORY_OPTIONS } from "@/features/events/data/event-categories";
 import {
+  APP_INTL_LOCALES,
+  useLocalization,
+  type AppLocale,
+  type Translate,
+  type TranslationKey,
+} from "@/features/localization/localization";
+import {
   Charcoal,
   Grapefruit,
   GrapefruitSoft,
@@ -71,12 +78,16 @@ export function FiltersOverlay({
   filtersExpandedHeight,
   filtersProgress,
   onApplyFilters,
-  searchSubtitle = "Anywhere · any time · filters",
-  searchTitle = "Search plans",
+  searchSubtitle,
+  searchTitle,
   searchBarWidth,
   showRadiusFilter = false,
   topOverlayOffset,
 }: FiltersOverlayProps) {
+  const { t } = useLocalization();
+  const localizedSearchSubtitle =
+    searchSubtitle ?? t("filters.defaultSubtitle");
+  const localizedSearchTitle = searchTitle ?? t("filters.searchPlans");
   const [draftFilters, setDraftFilters] = useState<FilterState>(() =>
     cloneFilterState(filters),
   );
@@ -179,8 +190,8 @@ export function FiltersOverlay({
         >
           <SearchGhost
             activeFilterCount={appliedFilterCount}
-            title={searchTitle}
-            subtitle={searchSubtitle}
+            title={localizedSearchTitle}
+            subtitle={localizedSearchSubtitle}
           />
         </Animated.View>
       </Animated.View>
@@ -193,7 +204,7 @@ export function FiltersOverlay({
       >
         <View style={styles.filtersHeader}>
           <Pressable
-            accessibilityLabel="Done filtering"
+            accessibilityLabel={t("filters.doneA11y")}
             accessibilityRole="button"
             hitSlop={10}
             onPress={commitAndClose}
@@ -214,7 +225,7 @@ export function FiltersOverlay({
             />
           </Pressable>
           <ThemedText type="default" style={styles.filtersHeaderTitle}>
-            Filters
+            {t("filters.title")}
           </ThemedText>
           <FiltersResetButton
             disabled={draftFilterCount === 0}
@@ -291,7 +302,7 @@ export function FiltersOverlay({
               weight="bold"
             />
             <ThemedText type="smallBold" style={styles.filtersSubmitText}>
-              Apply filters
+              {t("filters.apply")}
             </ThemedText>
           </Pressable>
           <View style={styles.filtersSubmitBottomSpacer} />
@@ -308,6 +319,7 @@ function FiltersResetButton({
   disabled: boolean;
   onPress: () => void;
 }) {
+  const { t } = useLocalization();
   const activeProgress = useSharedValue(disabled ? 0 : 1);
 
   useEffect(() => {
@@ -333,7 +345,7 @@ function FiltersResetButton({
   return (
     <Animated.View style={[styles.filtersResetButton, animatedStyle]}>
       <Pressable
-        accessibilityLabel="Reset all filters"
+        accessibilityLabel={t("filters.resetA11y")}
         accessibilityRole="button"
         accessibilityState={{ disabled }}
         disabled={disabled}
@@ -367,6 +379,9 @@ function WhenFilterSection({
   onChange: (value: FilterState["when"]) => void;
   value: FilterState["when"];
 }) {
+  const { locale, t } = useLocalization();
+  const intlLocale = APP_INTL_LOCALES[locale];
+  const weekStartsOnMonday = locale !== "en";
   const today = useMemo(() => startOfDay(new Date()), []);
   const tomorrow = useMemo(() => addDays(today, 1), [today]);
   const weekendStart = useMemo(() => getWeekendStart(today), [today]);
@@ -377,8 +392,17 @@ function WhenFilterSection({
   const [visibleMonth, setVisibleMonth] = useState(startOfMonth(today));
   const [calendarOpen, setCalendarOpen] = useState(false);
   const calendarDays = useMemo(
-    () => createCalendarDays(visibleMonth),
-    [visibleMonth],
+    () => createCalendarDays(visibleMonth, weekStartsOnMonday),
+    [visibleMonth, weekStartsOnMonday],
+  );
+  const calendarWeekdays = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, index) =>
+        new Intl.DateTimeFormat(intlLocale, { weekday: "narrow" }).format(
+          new Date(2024, 0, (weekStartsOnMonday ? 8 : 7) + index),
+        ),
+      ),
+    [intlLocale, weekStartsOnMonday],
   );
   const canShowPreviousMonth =
     compareMonths(visibleMonth, startOfMonth(today)) > 0;
@@ -390,24 +414,24 @@ function WhenFilterSection({
   }[] = [
     {
       key: "anytime",
-      label: "Any time",
+      label: t("filters.anytime"),
     },
     {
       end: today,
       key: "today",
-      label: "Today",
+      label: t("filters.today"),
       start: today,
     },
     {
       end: tomorrow,
       key: "tomorrow",
-      label: "Tomorrow",
+      label: t("filters.tomorrow"),
       start: tomorrow,
     },
     {
       end: weekendEnd,
       key: "weekend",
-      label: "Weekend",
+      label: t("filters.weekend"),
       start: weekendStart,
     },
   ];
@@ -458,15 +482,20 @@ function WhenFilterSection({
     >
       <View style={styles.whenSectionHeader}>
         <ThemedText type="default" style={styles.filterSectionTitle}>
-          When
+          {t("filters.when")}
         </ThemedText>
         <Pressable
           accessibilityLabel={
             selectedPreset === "custom"
               ? rangeEnd
-                ? `Selected ${formatLongDate(rangeStart)} to ${formatLongDate(rangeEnd)}`
-                : `Start date ${formatLongDate(rangeStart)}. Choose an end date`
-              : "Choose a date range"
+                ? t("filters.selectedRangeA11y", {
+                    end: formatLongDate(rangeEnd, intlLocale),
+                    start: formatLongDate(rangeStart, intlLocale),
+                  })
+                : t("filters.startDateA11y", {
+                    start: formatLongDate(rangeStart, intlLocale),
+                  })
+              : t("filters.chooseRangeA11y")
           }
           accessibilityRole="button"
           accessibilityState={{
@@ -498,7 +527,7 @@ function WhenFilterSection({
           />
           {selectedPreset === "custom" && (
             <ThemedText type="smallBold" style={styles.whenCalendarTriggerText}>
-              {formatRange(rangeStart, rangeEnd)}
+              {formatRange(rangeStart, rangeEnd, intlLocale)}
             </ThemedText>
           )}
         </Pressable>
@@ -529,7 +558,7 @@ function WhenFilterSection({
         >
           <View style={styles.calendarHeader}>
             <Pressable
-              accessibilityLabel="Previous month"
+              accessibilityLabel={t("filters.previousMonth")}
               accessibilityRole="button"
               disabled={!canShowPreviousMonth}
               hitSlop={6}
@@ -554,10 +583,10 @@ function WhenFilterSection({
               />
             </Pressable>
             <ThemedText type="smallBold" style={styles.calendarMonthLabel}>
-              {formatMonth(visibleMonth)}
+              {formatMonth(visibleMonth, intlLocale)}
             </ThemedText>
             <Pressable
-              accessibilityLabel="Next month"
+              accessibilityLabel={t("filters.nextMonth")}
               accessibilityRole="button"
               hitSlop={6}
               onPress={() => setVisibleMonth((month) => addMonths(month, 1))}
@@ -585,7 +614,7 @@ function WhenFilterSection({
             key={`${visibleMonth.getFullYear()}-${visibleMonth.getMonth()}`}
           >
             <View style={styles.calendarWeekRow}>
-              {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+              {calendarWeekdays.map((day, index) => (
                 <ThemedText
                   key={`${day}-${index}`}
                   type="smallBold"
@@ -623,9 +652,13 @@ function WhenFilterSection({
                   !isSameCalendarDay(rangeStart, rangeEnd);
                 const hasRangeFill = isInRange && hasRangeSpan;
                 const startsRangeSegment =
-                  hasRangeFill && (isRangeStart || date.getDay() === 0);
+                  hasRangeFill &&
+                  (isRangeStart ||
+                    date.getDay() === (weekStartsOnMonday ? 1 : 0));
                 const endsRangeSegment =
-                  hasRangeFill && (isRangeEnd || date.getDay() === 6);
+                  hasRangeFill &&
+                  (isRangeEnd ||
+                    date.getDay() === (weekStartsOnMonday ? 0 : 6));
                 const isRangeEndpoint = isRangeStart || isRangeEnd;
                 const isToday = isSameCalendarDay(date, today);
                 const disabled = date.getTime() < today.getTime();
@@ -641,7 +674,7 @@ function WhenFilterSection({
                     ]}
                   >
                     <Pressable
-                      accessibilityLabel={formatLongDate(date)}
+                      accessibilityLabel={formatLongDate(date, intlLocale)}
                       accessibilityRole="button"
                       accessibilityState={{
                         disabled,
@@ -687,7 +720,7 @@ function WhenFilterSection({
               ]}
             >
               <ThemedText type="smallBold" style={styles.calendarResetText}>
-                Reset
+                {t("common.reset")}
               </ThemedText>
             </Pressable>
             <Pressable
@@ -703,7 +736,7 @@ function WhenFilterSection({
               ]}
             >
               <ThemedText type="smallBold" style={styles.calendarDoneText}>
-                Done
+                {t("common.done")}
               </ThemedText>
             </Pressable>
           </View>
@@ -782,13 +815,15 @@ function RadiusFilterSection({
   onChange: (value: RadiusKm) => void;
   value: RadiusKm;
 }) {
+  const { t } = useLocalization();
+
   return (
     <Animated.View
       style={[styles.filterSection, styles.radiusSection, animatedStyle]}
     >
       <View style={styles.radiusHeader}>
         <ThemedText type="default" style={styles.filterSectionTitle}>
-          Radius
+          {t("filters.radius")}
         </ThemedText>
         <ThemedText type="smallBold" style={styles.radiusValue}>
           {value === 50 ? "50+ km" : `${value} km`}
@@ -797,7 +832,9 @@ function RadiusFilterSection({
       <View style={styles.whenPresetGrid}>
         {RADIUS_OPTIONS.map((option) => (
           <FilterSegmentOption
-            accessibilityLabel={`Within ${option.label} kilometers`}
+            accessibilityLabel={t("filters.withinKmA11y", {
+              distance: option.label,
+            })}
             key={option.value}
             label={option.label}
             onPress={() => onChange(option.value)}
@@ -810,21 +847,21 @@ function RadiusFilterSection({
 }
 
 const PRICE_OPTIONS: {
-  accessibilityLabel?: string;
+  accessibilityLabelKey?: TranslationKey;
   key: PriceMode;
-  label: string;
+  labelKey: TranslationKey;
 }[] = [
-  { key: "all", label: "All" },
-  { key: "free", label: "Free" },
+  { key: "all", labelKey: "common.all" },
+  { key: "free", labelKey: "common.free" },
   {
-    accessibilityLabel: "Pay separately at the venue",
+    accessibilityLabelKey: "filters.payOnSiteA11y",
     key: "pay-on-site",
-    label: "Pay on site",
+    labelKey: "common.payOnSite",
   },
   {
-    accessibilityLabel: "Pay a fee to the organizer",
+    accessibilityLabelKey: "filters.hostFeeA11y",
     key: "host-fee",
-    label: "Host fee",
+    labelKey: "common.hostFee",
   },
 ];
 
@@ -837,19 +874,25 @@ function PriceFilterSection({
   onChange: (value: PriceMode) => void;
   value: PriceMode;
 }) {
+  const { t } = useLocalization();
+
   return (
     <Animated.View
       style={[styles.filterSection, styles.priceSection, animatedStyle]}
     >
       <ThemedText type="default" style={styles.filterSectionTitle}>
-        Price
+        {t("common.price")}
       </ThemedText>
       <View style={styles.whenPresetGrid}>
         {PRICE_OPTIONS.map((option) => (
           <FilterSegmentOption
-            accessibilityLabel={option.accessibilityLabel}
+            accessibilityLabel={
+              option.accessibilityLabelKey
+                ? t(option.accessibilityLabelKey)
+                : undefined
+            }
             key={option.key}
-            label={option.label}
+            label={t(option.labelKey)}
             onPress={() => onChange(option.key)}
             selected={value === option.key}
           />
@@ -863,10 +906,10 @@ type AvailabilityOptionId = "open-spots" | "instant-join";
 
 const AVAILABILITY_OPTIONS: {
   id: AvailabilityOptionId;
-  label: string;
+  labelKey: TranslationKey;
 }[] = [
-  { id: "open-spots", label: "Open spots only" },
-  { id: "instant-join", label: "Instant join only" },
+  { id: "open-spots", labelKey: "filters.openSpotsOnly" },
+  { id: "instant-join", labelKey: "filters.instantJoinOnly" },
 ];
 
 function AvailabilityFilterSection({
@@ -878,6 +921,8 @@ function AvailabilityFilterSection({
   onChange: (value: FilterState["availability"]) => void;
   value: FilterState["availability"];
 }) {
+  const { t } = useLocalization();
+
   const toggleOption = (optionId: AvailabilityOptionId) => {
     if (optionId === "open-spots") {
       onChange({ ...value, openSpotsOnly: !value.openSpotsOnly });
@@ -892,13 +937,13 @@ function AvailabilityFilterSection({
       style={[styles.filterSection, styles.availabilitySection, animatedStyle]}
     >
       <ThemedText type="default" style={styles.filterSectionTitle}>
-        Availability
+        {t("filters.availability")}
       </ThemedText>
       <View style={styles.availabilityList}>
         {AVAILABILITY_OPTIONS.map((option, index) => (
           <AvailabilityCheckboxRow
             key={option.id}
-            label={option.label}
+            label={t(option.labelKey)}
             onPress={() => toggleOption(option.id)}
             selected={
               option.id === "open-spots"
@@ -1050,6 +1095,7 @@ function CategoryFilterSection({
   onChange: (value: string[]) => void;
   value: string[];
 }) {
+  const { t } = useLocalization();
   const countVisibility = useSharedValue(0);
 
   useEffect(() => {
@@ -1085,7 +1131,7 @@ function CategoryFilterSection({
     >
       <View style={styles.categoryHeader}>
         <ThemedText type="default" style={styles.filterSectionTitle}>
-          Category
+          {t("common.categories")}
         </ThemedText>
         <Animated.View
           accessibilityElementsHidden={value.length === 0}
@@ -1123,6 +1169,7 @@ function CategoryOption({
   onPress: () => void;
   selected: boolean;
 }) {
+  const { t } = useLocalization();
   const selectionProgress = useSharedValue(selected ? 1 : 0);
 
   useEffect(() => {
@@ -1169,7 +1216,7 @@ function CategoryOption({
             selected && styles.categoryOptionTextSelected,
           ]}
         >
-          {category.label}
+          {t(category.labelKey)}
         </ThemedText>
         {selected && (
           <Animated.View entering={FadeIn.duration(120)}>
@@ -1197,46 +1244,6 @@ function useStaggeredFilterStyle(progress: SharedValue<number>, start: number) {
     opacity: interpolate(progress.value, [0, start, end, 1], [0, 0, 1, 1]),
   }));
 }
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
-
-const SHORT_MONTH_NAMES = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-] as const;
-
-const WEEKDAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-] as const;
 
 function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -1272,8 +1279,10 @@ function getWeekendStart(today: Date) {
   return addDays(today, daysUntilSaturday);
 }
 
-function createCalendarDays(month: Date) {
-  const leadingEmptyDays = month.getDay();
+function createCalendarDays(month: Date, weekStartsOnMonday: boolean) {
+  const leadingEmptyDays = weekStartsOnMonday
+    ? (month.getDay() + 6) % 7
+    : month.getDay();
   const daysInMonth = new Date(
     month.getFullYear(),
     month.getMonth() + 1,
@@ -1299,32 +1308,38 @@ function isSameCalendarDay(left: Date, right: Date) {
   );
 }
 
-function formatPresetDate(date: Date) {
-  return `${SHORT_MONTH_NAMES[date.getMonth()]} ${date.getDate()}`;
+function formatPresetDate(date: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+  }).format(date);
 }
 
-function formatRange(start: Date, end: Date | null) {
+function formatRange(start: Date, end: Date | null, locale: string) {
   if (!end) {
-    return `${formatPresetDate(start)} →`;
+    return `${formatPresetDate(start, locale)} →`;
   }
 
   if (isSameCalendarDay(start, end)) {
-    return formatPresetDate(start);
+    return formatPresetDate(start, locale);
   }
 
-  if (start.getMonth() === end.getMonth()) {
-    return `${SHORT_MONTH_NAMES[start.getMonth()]} ${start.getDate()} → ${end.getDate()}`;
-  }
-
-  return `${formatPresetDate(start)} → ${formatPresetDate(end)}`;
+  return `${formatPresetDate(start, locale)} → ${formatPresetDate(end, locale)}`;
 }
 
-function formatMonth(date: Date) {
-  return `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
+function formatMonth(date: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+  }).format(date);
 }
 
-function formatLongDate(date: Date) {
-  return `${WEEKDAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`;
+function formatLongDate(date: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    weekday: "long",
+  }).format(date);
 }
 
 export function createDefaultFilterState(): FilterState {
@@ -1359,49 +1374,59 @@ export function getActiveFilterCount(filters: FilterState) {
 
 export function getFilterSummary(
   filters: FilterState,
-  options: { includeRadius?: boolean } = {},
+  options: {
+    includeRadius?: boolean;
+    locale: AppLocale;
+    t: Translate;
+  },
 ) {
+  const { locale, t } = options;
   const parts: string[] = [];
 
   if (options.includeRadius) {
     parts.push(
-      filters.radiusKm === 50
-        ? "Within 50+ km"
-        : `Within ${filters.radiusKm} km`,
+      t("filters.withinKm", {
+        distance: filters.radiusKm === 50 ? "50+" : filters.radiusKm,
+      }),
     );
   }
 
   if (filters.when.preset !== "anytime") {
-    parts.push(getWhenFilterLabel(filters.when));
+    parts.push(getWhenFilterLabel(filters.when, t, APP_INTL_LOCALES[locale]));
   }
 
   if (filters.categoryIds.length === 1) {
-    parts.push(
-      EVENT_CATEGORY_OPTIONS.find(
-        (category) => category.id === filters.categoryIds[0],
-      )?.label ?? "1 category",
+    const category = EVENT_CATEGORY_OPTIONS.find(
+      (option) => option.id === filters.categoryIds[0],
     );
+
+    parts.push(category ? t(category.labelKey) : t("filters.oneCategory"));
   } else if (filters.categoryIds.length > 1) {
-    parts.push(`${filters.categoryIds.length} categories`);
+    parts.push(
+      t("filters.categoryCount", { count: filters.categoryIds.length }),
+    );
   }
 
   if (filters.priceMode !== "all") {
+    const priceOption = PRICE_OPTIONS.find(
+      (option) => option.key === filters.priceMode,
+    );
+
     parts.push(
-      PRICE_OPTIONS.find((option) => option.key === filters.priceMode)?.label ??
-        "Price",
+      priceOption ? t(priceOption.labelKey) : t("common.price"),
     );
   }
 
   if (filters.availability.openSpotsOnly) {
-    parts.push("Open spots");
+    parts.push(t("filters.openSpots"));
   }
 
   if (filters.availability.instantJoinOnly) {
-    parts.push("Instant join");
+    parts.push(t("filters.instantJoin"));
   }
 
   if (parts.length === 0) {
-    return "Any time · all categories";
+    return t("filters.defaultSummary");
   }
 
   const visibleParts = parts.slice(0, 2);
@@ -1437,17 +1462,21 @@ function normalizeFilterState(filters: FilterState): FilterState {
   return normalized;
 }
 
-function getWhenFilterLabel(when: FilterState["when"]) {
+function getWhenFilterLabel(
+  when: FilterState["when"],
+  t: Translate,
+  locale: string,
+) {
   switch (when.preset) {
     case "today":
-      return "Today";
+      return t("filters.today");
     case "tomorrow":
-      return "Tomorrow";
+      return t("filters.tomorrow");
     case "weekend":
-      return "Weekend";
+      return t("filters.weekend");
     case "custom":
-      return formatRange(when.start, when.end);
+      return formatRange(when.start, when.end, locale);
     default:
-      return "Any time";
+      return t("filters.anytime");
   }
 }

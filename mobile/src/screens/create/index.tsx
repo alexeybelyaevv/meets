@@ -44,6 +44,11 @@ import {
   EVENT_CATEGORY_OPTIONS,
   type EventCategoryOption,
 } from "@/features/events/data/event-categories";
+import {
+  APP_INTL_LOCALES,
+  useLocalization,
+  type TranslationKey,
+} from "@/features/localization/localization";
 import { getTestEventImage } from "@/screens/main/data/event-images";
 import {
   Charcoal,
@@ -74,43 +79,57 @@ import type { EventFormValues, LocationSuggestion } from "./types";
 
 const stepCopy: Record<
   (typeof steps)[number]["id"],
-  { description: string; title: string }
+  { descriptionKey: TranslationKey; titleKey: TranslationKey }
 > = {
   basics: {
-    description: "Give people a reason to stop scrolling and join.",
-    title: "Make it irresistible",
+    descriptionKey: "create.basics.description",
+    titleKey: "create.basics.title",
   },
   place: {
-    description: "Choose when it happens and pin the exact meeting spot.",
-    title: "Set the moment",
+    descriptionKey: "create.place.description",
+    titleKey: "create.place.title",
   },
   people: {
-    description: "Shape the group, price, and expectations.",
-    title: "Make it feel right",
+    descriptionKey: "create.people.description",
+    titleKey: "create.people.title",
   },
   review: {
-    description: "One final look before your event goes live.",
-    title: "Ready to publish",
+    descriptionKey: "create.review.description",
+    titleKey: "create.review.title",
   },
 };
 
 const priceOptions = [
   {
-    accessibilityLabel: "The event is free",
-    label: "Free",
+    accessibilityLabelKey: "create.freeA11y",
+    labelKey: "common.free",
     value: "free",
   },
   {
-    accessibilityLabel: "Everyone pays separately at the venue",
-    label: "Pay on site",
+    accessibilityLabelKey: "create.payOnSiteA11y",
+    labelKey: "common.payOnSite",
     value: "pay-on-site",
   },
   {
-    accessibilityLabel: "Guests pay a fee to the organizer",
-    label: "Host fee",
+    accessibilityLabelKey: "create.hostFeeA11y",
+    labelKey: "common.hostFee",
     value: "host-fee",
   },
-] as const;
+] as const satisfies readonly {
+  accessibilityLabelKey: TranslationKey;
+  labelKey: TranslationKey;
+  value: EventFormValues["priceType"];
+}[];
+
+const stepTitleKeys = {
+  basics: "create.step.basics",
+  people: "create.step.people",
+  place: "create.step.place",
+  review: "create.step.review",
+} as const satisfies Record<
+  (typeof steps)[number]["id"],
+  TranslationKey
+>;
 
 function CreateCategoryOption({
   category,
@@ -121,6 +140,7 @@ function CreateCategoryOption({
   onPress: () => void;
   selected: boolean;
 }) {
+  const { t } = useLocalization();
   const selectionProgress = useSharedValue(selected ? 1 : 0);
 
   useEffect(() => {
@@ -169,7 +189,7 @@ function CreateCategoryOption({
             selected && styles.categoryTileTextSelected,
           ]}
         >
-          {category.label}
+          {t(category.labelKey)}
         </ThemedText>
         {selected ? (
           <Animated.View entering={FadeIn.duration(120)}>
@@ -191,6 +211,8 @@ function CreateCategoryOption({
 }
 
 export default function CreateScreen() {
+  const { locale, t } = useLocalization();
+  const intlLocale = APP_INTL_LOCALES[locale];
   const [stepIndex, setStepIndex] = useState(0);
   const [composerHeaderHeight, setComposerHeaderHeight] = useState(184);
   const [created, setCreated] = useState(false);
@@ -219,21 +241,28 @@ export default function CreateScreen() {
   const activeStep = steps[stepIndex];
   const isLastStep = stepIndex === steps.length - 1;
   const bottomPadding = BottomNavigationInset + 76;
-  const activeStepCopy = stepCopy[activeStep.id];
+  const activeStepCopy = {
+    description: t(stepCopy[activeStep.id].descriptionKey),
+    title: t(stepCopy[activeStep.id].titleKey),
+  };
   const previewImageSource = values.photos?.[0]
     ? { uri: values.photos[0] }
     : getTestEventImage(3);
-  const previewCategoryLabel =
-    EVENT_CATEGORY_OPTIONS.find(
-      (category) => category.id === values.categories?.[0],
-    )?.label ?? "Event";
+  const previewCategory = EVENT_CATEGORY_OPTIONS.find(
+    (category) => category.id === values.categories?.[0],
+  );
+  const previewCategoryLabel = previewCategory
+    ? t(previewCategory.labelKey)
+    : t("common.event");
   const primaryActionLabel = isLastStep
     ? isSubmitting
-      ? "Publishing..."
-      : "Publish event"
+      ? t("create.publishing")
+      : t("create.publish")
     : stepIndex === steps.length - 2
-      ? "Review event"
-      : `Next: ${steps[stepIndex + 1].title}`;
+      ? t("create.reviewEvent")
+      : t("create.next", {
+          step: t(stepTitleKeys[steps[stepIndex + 1].id]),
+        });
 
   const goToStep = (nextIndex: number) => {
     if (nextIndex === stepIndex) {
@@ -425,8 +454,8 @@ export default function CreateScreen() {
       if (suggestions.length === 0) {
         if (options?.showAlert) {
           Alert.alert(
-            "Location not found",
-            "Try a more specific place or address.",
+            t("create.locationNotFound"),
+            t("create.locationNotFoundBody"),
           );
         }
         return;
@@ -436,8 +465,8 @@ export default function CreateScreen() {
     } catch {
       if (options?.showAlert) {
         Alert.alert(
-          "Location search failed",
-          "Check connection and try again.",
+          t("create.locationSearchFailed"),
+          t("create.locationSearchFailedBody"),
         );
       }
     } finally {
@@ -466,11 +495,11 @@ export default function CreateScreen() {
 
       setValue(
         "locationName",
-        result.name || address.split(",")[0] || "Map point",
+        result.name || address.split(",")[0] || t("create.mapPoint"),
       );
       setValue("locationAddress", address);
     } catch {
-      setValue("locationName", "Map point");
+      setValue("locationName", t("create.mapPoint"));
       setValue(
         "locationAddress",
         `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`,
@@ -503,7 +532,10 @@ export default function CreateScreen() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
-      Alert.alert("Photos permission", "Allow photo access to add images.");
+      Alert.alert(
+        t("create.photosPermission"),
+        t("create.photosPermissionBody"),
+      );
       return;
     }
 
@@ -544,8 +576,8 @@ export default function CreateScreen() {
     } catch (error) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(
-        "Could not create event",
-        error instanceof Error ? error.message : "Please try again.",
+        t("create.failed"),
+        error instanceof Error ? error.message : t("create.tryAgain"),
       );
     }
   });
@@ -589,14 +621,13 @@ export default function CreateScreen() {
                 style={styles.doneCopy}
               >
                 <ThemedText type="smallBold" style={styles.doneEyebrow}>
-                  Published
+                  {t("create.published")}
                 </ThemedText>
                 <ThemedText type="subtitle" style={styles.doneTitle}>
-                  Your plan is live
+                  {t("create.liveTitle")}
                 </ThemedText>
                 <ThemedText type="default" style={styles.doneBody}>
-                  People nearby can now discover it, join in, and make it
-                  happen with you.
+                  {t("create.liveBody")}
                 </ThemedText>
               </Animated.View>
               <Pressable
@@ -618,7 +649,7 @@ export default function CreateScreen() {
                 ]}
               >
                 <ThemedText type="smallBold" style={styles.primaryButtonText}>
-                  Create another
+                  {t("create.createAnother")}
                 </ThemedText>
               </Pressable>
             </Animated.View>
@@ -652,7 +683,7 @@ export default function CreateScreen() {
               <View style={styles.composerBadge}>
                 <View style={styles.composerBadgeDot} />
                 <ThemedText type="smallBold" style={styles.composerBadgeText}>
-                  New event
+                  {t("create.newEvent")}
                 </ThemedText>
               </View>
               <ThemedText type="smallBold" style={styles.composerCount}>
@@ -669,7 +700,9 @@ export default function CreateScreen() {
                 return (
                   <Pressable
                     key={step.id}
-                    accessibilityLabel={`Go to ${step.title}`}
+                    accessibilityLabel={t("create.goToStepA11y", {
+                      step: t(stepTitleKeys[step.id]),
+                    })}
                     accessibilityRole="button"
                     accessibilityState={{ selected: current }}
                     disabled={index > stepIndex}
@@ -702,7 +735,7 @@ export default function CreateScreen() {
               style={styles.composerCopy}
             >
               <ThemedText type="smallBold" style={styles.composerKicker}>
-                {activeStep.title}
+                {t(stepTitleKeys[activeStep.id])}
               </ThemedText>
               <ThemedText type="subtitle" style={styles.composerTitle}>
                 {activeStepCopy.title}
@@ -757,9 +790,9 @@ export default function CreateScreen() {
                       android: "edit",
                       web: "edit",
                     }}
-                    label="Event name"
+                    label={t("create.eventName")}
                     name="title"
-                    placeholder="Rooftop board games"
+                    placeholder={t("create.eventNamePlaceholder")}
                   />
                   <ControlledInput
                     control={control}
@@ -768,10 +801,10 @@ export default function CreateScreen() {
                       android: "subject",
                       web: "subject",
                     }}
-                    label="Description"
+                    label={t("common.description")}
                     multiline
                     name="description"
-                    placeholder="What will happen, who should join, and what is the vibe?"
+                    placeholder={t("create.descriptionPlaceholder")}
                   />
                   <View style={styles.fieldGroup}>
                     <Controller
@@ -780,7 +813,7 @@ export default function CreateScreen() {
                       render={({ field: { onChange, value } }) => (
                         <View style={styles.categorySelect}>
                           <View style={styles.categoryHeader}>
-                            <FieldLabel label="Categories" />
+                            <FieldLabel label={t("common.categories")} />
                             {value.length > 0 ? (
                               <Animated.View
                                 key={value.length}
@@ -825,7 +858,7 @@ export default function CreateScreen() {
                     />
                   </View>
                   <View style={styles.fieldGroup}>
-                    <FieldLabel label="Photos" optional />
+                    <FieldLabel label={t("create.photos")} optional />
                     <Controller
                       control={control}
                       name="photos"
@@ -899,7 +932,7 @@ export default function CreateScreen() {
                               type="smallBold"
                               style={styles.photoText}
                             >
-                              Add photo
+                              {t("create.addPhoto")}
                             </ThemedText>
                           </Pressable>
                         </ScrollView>
@@ -923,7 +956,7 @@ export default function CreateScreen() {
                         android: "calendar_month",
                         web: "calendar_month",
                       }}
-                      label="Date"
+                      label={t("create.date")}
                       mode="date"
                       name="date"
                     />
@@ -934,7 +967,7 @@ export default function CreateScreen() {
                         android: "schedule",
                         web: "schedule",
                       }}
-                      label="Time"
+                      label={t("create.time")}
                       mode="time"
                       name="time"
                     />
@@ -985,7 +1018,7 @@ export default function CreateScreen() {
                                 showAlert: true,
                               })
                             }
-                            placeholder="Search bars, places, address"
+                            placeholder={t("create.searchLocation")}
                             placeholderTextColor="#A69D98"
                             returnKeyType="search"
                             style={styles.mapSearchInput}
@@ -1034,7 +1067,7 @@ export default function CreateScreen() {
                             type="smallBold"
                             style={styles.locationSearchingText}
                           >
-                            Searching places
+                            {t("create.searchingPlaces")}
                           </ThemedText>
                         </View>
                       ) : null}
@@ -1087,7 +1120,7 @@ export default function CreateScreen() {
                     </View>
                     <View style={styles.mapHintPill}>
                       <ThemedText type="smallBold" style={styles.mapHintText}>
-                        Tap map to move pin
+                        {t("create.tapMap")}
                       </ThemedText>
                     </View>
                   </View>
@@ -1098,7 +1131,7 @@ export default function CreateScreen() {
                       android: "location_on",
                       web: "location_on",
                     }}
-                    label="Place name"
+                    label={t("create.placeName")}
                     name="locationName"
                     placeholder="Sky Park"
                   />
@@ -1109,7 +1142,7 @@ export default function CreateScreen() {
                       android: "map",
                       web: "map",
                     }}
-                    label="Address"
+                    label={t("create.address")}
                     name="locationAddress"
                     placeholder="Bratislava, Slovakia"
                   />
@@ -1126,7 +1159,7 @@ export default function CreateScreen() {
                     <View style={styles.column}>
                       <ControlledNumberPicker
                         control={control}
-                        label="Capacity"
+                        label={t("create.capacity")}
                         max={50}
                         min={2}
                         name="capacity"
@@ -1135,7 +1168,7 @@ export default function CreateScreen() {
                     <View style={styles.column}>
                       <ControlledNumberPicker
                         control={control}
-                        label="Already joined"
+                        label={t("create.alreadyJoined")}
                         max={50}
                         min={0}
                         name="peopleAlreadyThere"
@@ -1143,7 +1176,7 @@ export default function CreateScreen() {
                     </View>
                   </View>
                   <View style={styles.fieldGroup}>
-                    <FieldLabel label="Price" />
+                    <FieldLabel label={t("common.price")} />
                     <Controller
                       control={control}
                       name="priceType"
@@ -1154,7 +1187,9 @@ export default function CreateScreen() {
                             return (
                               <Pressable
                                 key={option.value}
-                                accessibilityLabel={option.accessibilityLabel}
+                                accessibilityLabel={t(
+                                  option.accessibilityLabelKey,
+                                )}
                                 accessibilityRole="radio"
                                 accessibilityState={{ selected }}
                                 onPress={() => {
@@ -1176,7 +1211,7 @@ export default function CreateScreen() {
                                       styles.priceOptionTextSelected,
                                   ]}
                                 >
-                                  {option.label}
+                                  {t(option.labelKey)}
                                 </ThemedText>
                               </Pressable>
                             );
@@ -1195,7 +1230,7 @@ export default function CreateScreen() {
                           web: "payments",
                         }}
                         keyboardType="decimal-pad"
-                        label="Host fee · EUR"
+                        label={t("create.hostFeeEur")}
                         name="priceAmount"
                         placeholder="10"
                       />
@@ -1208,9 +1243,9 @@ export default function CreateScreen() {
                       android: "backpack",
                       web: "backpack",
                     }}
-                    label="What to bring"
+                    label={t("create.whatToBring")}
                     name="bringItems"
-                    placeholder="Optional, e.g. blanket, water, ID"
+                    placeholder={t("create.bringPlaceholder")}
                   />
                 </Animated.View>
               )}
@@ -1244,7 +1279,7 @@ export default function CreateScreen() {
                           type="smallBold"
                           style={styles.previewStatusText}
                         >
-                          Preview
+                          {t("create.preview")}
                         </ThemedText>
                       </View>
                     </View>
@@ -1254,12 +1289,21 @@ export default function CreateScreen() {
                         style={styles.previewTitle}
                         numberOfLines={2}
                       >
-                        {values.title || "Untitled event"}
+                        {values.title || t("create.untitled")}
                       </ThemedText>
                       <ThemedText type="small" style={styles.previewMeta}>
-                        {formatEventDate(values.date)} ·{" "}
-                        {formatEventTime(values.time)} ·{" "}
-                        {values.locationName || "Location"}
+                        {formatEventDate(
+                          values.date,
+                          intlLocale,
+                          t("create.chooseDate"),
+                        )}{" "}
+                        ·{" "}
+                        {formatEventTime(
+                          values.time,
+                          intlLocale,
+                          t("create.chooseTime"),
+                        )}{" "}
+                        · {values.locationName || t("common.location")}
                       </ThemedText>
                     </View>
                   </View>
@@ -1269,8 +1313,8 @@ export default function CreateScreen() {
                       android: "subject",
                       web: "subject",
                     }}
-                    label="Description"
-                    value={values.description || "No description yet"}
+                    label={t("common.description")}
+                    value={values.description || t("create.noDescription")}
                   />
                   <PreviewRow
                     icon={{
@@ -1278,8 +1322,11 @@ export default function CreateScreen() {
                       android: "groups",
                       web: "groups",
                     }}
-                    label="People"
-                    value={`${values.peopleAlreadyThere || 0}/${values.capacity || 0} already planned`}
+                    label={t("common.people")}
+                    value={t("create.alreadyPlanned", {
+                      capacity: values.capacity || 0,
+                      count: values.peopleAlreadyThere || 0,
+                    })}
                   />
                   <PreviewRow
                     icon={{
@@ -1287,15 +1334,15 @@ export default function CreateScreen() {
                       android: "payments",
                       web: "payments",
                     }}
-                    label="Price"
+                    label={t("common.price")}
                     value={
                       values.priceType === "free"
-                        ? "Free"
+                        ? t("common.free")
                         : values.priceType === "pay-on-site"
-                          ? "Pay on site"
+                          ? t("common.payOnSite")
                           : values.priceAmount
-                            ? `Host fee · €${values.priceAmount}`
-                            : "Host fee"
+                            ? `${t("common.hostFee")} · €${values.priceAmount}`
+                            : t("common.hostFee")
                     }
                   />
                   <PreviewRow
@@ -1304,8 +1351,8 @@ export default function CreateScreen() {
                       android: "backpack",
                       web: "backpack",
                     }}
-                    label="Bring"
-                    value={values.bringItems || "Nothing special"}
+                    label={t("common.bring")}
+                    value={values.bringItems || t("common.nothingSpecial")}
                   />
                 </Animated.View>
               )}
@@ -1376,7 +1423,7 @@ export default function CreateScreen() {
                     stepIndex === 0 && styles.secondaryButtonTextDisabled,
                   ]}
                 >
-                  Back
+                  {t("common.back")}
                 </ThemedText>
               </Pressable>
             </Animated.View>

@@ -5,10 +5,12 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { AuthButton, AuthColors, AuthSurfaceCard } from './auth-ui';
 import { useSocialAuth } from '../hooks/useSocialAuth';
+import { useLocalization } from '@/features/localization/localization';
 
 const googleLogo = require('@/assets/images/google-g.png');
 
 export function SocialLoginButtons({ compact }: { compact?: boolean }) {
+  const { t } = useLocalization();
   const {
     authUser,
     error,
@@ -66,7 +68,7 @@ export function SocialLoginButtons({ compact }: { compact?: boolean }) {
         <>
           {isAppleAvailable && (
             <AuthButton
-              label={loading === 'apple' ? 'Signing in...' : 'Continue with Apple'}
+              label={loading === 'apple' ? t('auth.signingIn') : t('auth.continueApple')}
               disabled={Boolean(loading)}
               onPress={signInWithApple}
               icon={{ ios: 'apple.logo', android: 'smartphone', web: 'smartphone' }}
@@ -78,9 +80,9 @@ export function SocialLoginButtons({ compact }: { compact?: boolean }) {
             label={
               isGoogleAvailable
                 ? loading === 'google'
-                  ? 'Signing in...'
-                  : 'Continue with Google'
-                : 'Google requires a development build'
+                  ? t('auth.signingIn')
+                  : t('auth.continueGoogle')
+                : t('auth.googleDevBuild')
             }
             disabled={Boolean(loading) || !isGoogleAvailable}
             onPress={signInWithGoogle}
@@ -89,7 +91,7 @@ export function SocialLoginButtons({ compact }: { compact?: boolean }) {
           />
 
           <AuthButton
-            label={loading === 'telegram' ? 'Opening Telegram...' : 'Continue with Telegram'}
+            label={loading === 'telegram' ? t('auth.openingTelegram') : t('auth.continueTelegram')}
             disabled={Boolean(loading)}
             onPress={startTelegramLogin}
             icon={{ ios: 'paperplane.fill', android: 'send', web: 'send' }}
@@ -100,8 +102,8 @@ export function SocialLoginButtons({ compact }: { compact?: boolean }) {
 
       {authUser && (
         <AuthSurfaceCard style={styles.status}>
-          <ThemedText type="smallBold">{authUser.user.name ?? authUser.user.email ?? 'Signed in'}</ThemedText>
-          <AuthButton label="Sign out" disabled={Boolean(loading)} onPress={signOut} secondary />
+          <ThemedText type="smallBold">{authUser.user.name ?? authUser.user.email ?? t('auth.signedIn')}</ThemedText>
+          <AuthButton label={t('auth.signOut')} disabled={Boolean(loading)} onPress={signOut} secondary />
         </AuthSurfaceCard>
       )}
 

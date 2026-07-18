@@ -12,6 +12,7 @@ import {
 import { ThemedText } from "@/components/themed-text";
 import { Spacing } from "@/constants/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLocalization } from "@/features/localization/localization";
 
 interface Props {
   activeFilterCount: number;
@@ -24,6 +25,7 @@ export const Search = ({
   filterSummary,
   openFilters,
 }: Props) => {
+  const { t } = useLocalization();
   const insets = useSafeAreaInsets();
   const hasActiveFilters = activeFilterCount > 0;
   const topOverlayOffset = Math.max(insets.top + Spacing.two);
@@ -36,7 +38,7 @@ export const Search = ({
       ]}
     >
       <Pressable
-        accessibilityLabel={`Open filters. ${filterSummary}`}
+        accessibilityLabel={t("filters.openA11y", { summary: filterSummary })}
         accessibilityRole="button"
         onPress={openFilters}
         style={({ pressed }) => [styles.searchBar, pressed && styles.pressed]}
@@ -55,7 +57,7 @@ export const Search = ({
         </View>
         <View style={styles.searchTextBlock}>
           <ThemedText type="default" style={styles.searchTitle}>
-            Search plans
+            {t("filters.searchPlans")}
           </ThemedText>
           <ThemedText
             numberOfLines={1}

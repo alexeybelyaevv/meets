@@ -21,7 +21,7 @@ export type EventFormValues = {
 };
 
 export type Step = {
-  id: string;
+  id: "basics" | "people" | "place" | "review";
   title: string;
   eyebrow: string;
   icon: SymbolViewProps["name"];

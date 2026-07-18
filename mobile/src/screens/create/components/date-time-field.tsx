@@ -22,6 +22,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { Spacing } from "@/constants/theme";
 import {
+  APP_INTL_LOCALES,
+  useLocalization,
+} from "@/features/localization/localization";
+import {
   formatEventDate,
   formatEventTime,
   parseEventDateTimeValue,
@@ -51,6 +55,8 @@ export function ControlledDateTimePicker({
   mode,
   name,
 }: ControlledDateTimePickerProps) {
+  const { locale, t } = useLocalization();
+  const intlLocale = APP_INTL_LOCALES[locale];
   const [open, setOpen] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [draftValue, setDraftValue] = useState(() =>
@@ -76,8 +82,16 @@ export function ControlledDateTimePicker({
         const stringValue = String(value ?? "");
         const formattedValue =
           mode === "date"
-            ? formatEventDate(stringValue)
-            : formatEventTime(stringValue);
+            ? formatEventDate(
+                stringValue,
+                intlLocale,
+                t("create.chooseDate"),
+              )
+            : formatEventTime(
+                stringValue,
+                intlLocale,
+                t("create.chooseTime"),
+              );
 
         const closePicker = () => {
           setSheetVisible(false);
@@ -186,7 +200,9 @@ export function ControlledDateTimePicker({
                 <View style={styles.modal}>
                   <View style={styles.backdrop}>
                     <Pressable
-                      accessibilityLabel={`Close ${label.toLowerCase()} picker`}
+                      accessibilityLabel={t("picker.closeA11y", {
+                        field: label.toLocaleLowerCase(intlLocale),
+                      })}
                       accessibilityRole="button"
                       onPress={closePicker}
                       style={styles.backdropPressable}
@@ -227,7 +243,7 @@ export function ControlledDateTimePicker({
                             type="smallBold"
                             style={styles.doneButtonText}
                           >
-                            Done
+                            {t("common.done")}
                           </ThemedText>
                         </Pressable>
                       </View>
@@ -236,6 +252,7 @@ export function ControlledDateTimePicker({
                         <DateTimePicker
                           accentColor={Grapefruit}
                           display="spinner"
+                          locale={intlLocale}
                           minimumDate={
                             mode === "date" ? startOfToday() : undefined
                           }

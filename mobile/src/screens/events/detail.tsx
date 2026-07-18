@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Spacing } from "@/constants/theme";
+import { useLocalization } from "@/features/localization/localization";
 import {
   PlanDetailBody,
   PlanDetailHeader,
@@ -15,6 +16,7 @@ import { eventsStyles as styles } from "./styles";
 
 export function EventDetailScreen() {
   const router = useRouter();
+  const { t } = useLocalization();
   const params = useLocalSearchParams<{ eventId?: string | string[] }>();
   const eventId = Array.isArray(params.eventId)
     ? params.eventId[0]
@@ -29,7 +31,7 @@ export function EventDetailScreen() {
         {plan ? (
           <>
             <PlanDetailHeader
-              closeLabel="Back to events"
+              closeLabel={t("events.backToEvents")}
               onClose={() => router.replace("/events")}
               plan={plan}
             />
@@ -51,12 +53,12 @@ export function EventDetailScreen() {
         ) : (
           <View style={styles.detailFallback}>
             <ThemedText type="default" style={mainStyles.detailTitle}>
-              {loading ? "Loading event" : "Event not found"}
+              {loading ? t("events.loading") : t("events.notFound")}
             </ThemedText>
             <ThemedText type="small" style={styles.detailFallbackText}>
               {loading
-                ? "Getting the latest event details."
-                : "This event is no longer available."}
+                ? t("events.loadingDetails")
+                : t("events.noLongerAvailable")}
             </ThemedText>
           </View>
         )}

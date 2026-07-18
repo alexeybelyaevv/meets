@@ -19,6 +19,7 @@ import {
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { useLocalization } from "@/features/localization/localization";
 import {
   createDefaultFilterState,
   FiltersOverlay,
@@ -34,6 +35,7 @@ import { eventsStyles as styles } from "./styles";
 
 export function EventsScreen() {
   const router = useRouter();
+  const { locale, t } = useLocalization();
   const [filters, setFilters] = useState(createDefaultFilterState);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersProgress = useSharedValue(0);
@@ -42,7 +44,11 @@ export function EventsScreen() {
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const { eventsError, plans } = useEventPlans();
   const activeFilterCount = getActiveFilterCount(filters);
-  const filterSummary = getFilterSummary(filters, { includeRadius: true });
+  const filterSummary = getFilterSummary(filters, {
+    includeRadius: true,
+    locale,
+    t,
+  });
   const topOverlayOffset = Math.max(insets.top + Spacing.two, 52);
   const screenWidth = Math.min(windowWidth, MaxContentWidth);
   const searchBarWidth = Math.max(screenWidth - Spacing.three * 2, 0);
@@ -152,7 +158,7 @@ export function EventsScreen() {
             filtersProgress={filtersProgress}
             onApplyFilters={setFilters}
             searchSubtitle={filterSummary}
-            searchTitle="Events nearby"
+            searchTitle={t("filters.eventsNearby")}
             searchBarWidth={searchBarWidth}
             showRadiusFilter
             topOverlayOffset={topOverlayOffset}
@@ -169,15 +175,17 @@ function EventsListHeader({
 }: {
   eventsError: string | null;
 }) {
+  const { t } = useLocalization();
+
   return (
     <Animated.View entering={FadeIn.duration(260)} style={styles.listHeader}>
       <ThemedText type="subtitle" style={styles.title}>
-        Discover nearby
+        {t("events.discoverNearby")}
       </ThemedText>
       <ThemedText type="small" style={styles.subtitle} numberOfLines={1}>
         {eventsError
-          ? "Fresh local ideas while the live feed reconnects"
-          : "Plans worth leaving the house for"}
+          ? t("events.feedReconnecting")
+          : t("events.subtitle")}
       </ThemedText>
     </Animated.View>
   );

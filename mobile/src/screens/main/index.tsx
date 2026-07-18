@@ -11,6 +11,10 @@ import {
 } from "react-native-reanimated";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  APP_INTL_LOCALES,
+  useLocalization,
+} from "@/features/localization/localization";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { ThemedView } from "@/components/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
@@ -31,6 +35,7 @@ import { eventToFeaturedPlan } from "./lib/event-to-featured-plan";
 import { createMapHtml } from "./lib/map-html";
 
 export default function MainScreen() {
+  const { locale, t } = useLocalization();
   const mapRef = useRef<WebView>(null);
   const [events, setEvents] = useState<EventDto[]>([]);
   const [filters, setFilters] = useState(createDefaultFilterState);
@@ -41,8 +46,16 @@ export default function MainScreen() {
   const insets = useSafeAreaInsets();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const plans = useMemo(
-    () => (events.length > 0 ? events.map(eventToFeaturedPlan) : featuredPlans),
-    [events],
+    () =>
+      events.length > 0
+        ? events.map((event) =>
+            eventToFeaturedPlan(event, {
+              intlLocale: APP_INTL_LOCALES[locale],
+              t,
+            }),
+          )
+        : featuredPlans,
+    [events, locale, t],
   );
   const mapHtml = useMemo(
     () => createMapHtml(plans, testEventPinImageDataUrls),
@@ -50,7 +63,7 @@ export default function MainScreen() {
   );
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) ?? null;
   const activeFilterCount = getActiveFilterCount(filters);
-  const filterSummary = getFilterSummary(filters);
+  const filterSummary = getFilterSummary(filters, { locale, t });
   const topOverlayOffset = Math.max(insets.top + Spacing.two, 52);
   const drawerTopInset = topOverlayOffset + 58 + 16;
   const expandedDrawerSnapPoint = Math.max(220, windowHeight - drawerTopInset);

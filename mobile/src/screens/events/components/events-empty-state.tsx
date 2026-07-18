@@ -2,9 +2,12 @@ import { SymbolView } from "expo-symbols";
 import { View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { Grapefruit } from "@/screens/main/styles";
+import { useLocalization } from "@/features/localization/localization";
 import { eventsStyles as styles } from "../styles";
 
 export function EventsEmptyState() {
+  const { t } = useLocalization();
+
   return (
     <View style={styles.emptyState}>
       <View style={styles.emptyIcon}>
@@ -20,10 +23,10 @@ export function EventsEmptyState() {
         />
       </View>
       <ThemedText type="default" style={styles.emptyTitle}>
-        Nothing here yet
+        {t("events.emptyTitle")}
       </ThemedText>
       <ThemedText type="small" style={styles.emptyText}>
-        Fresh plans will show up here soon.
+        {t("events.emptyBody")}
       </ThemedText>
     </View>
   );

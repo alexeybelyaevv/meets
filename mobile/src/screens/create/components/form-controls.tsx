@@ -26,6 +26,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { Spacing } from "@/constants/theme";
+import { useLocalization } from "@/features/localization/localization";
 import type { EventFormValues } from "../types";
 
 const Grapefruit = "#FF5A5F";
@@ -181,6 +182,7 @@ export function ControlledNumberPicker({
   min,
   name,
 }: ControlledNumberPickerProps) {
+  const { t } = useLocalization();
   const [open, setOpen] = useState(false);
   const insets = useSafeAreaInsets();
   const wheelRef = useRef<ScrollView>(null);
@@ -227,7 +229,9 @@ export function ControlledNumberPicker({
         return (
           <>
             <Pressable
-              accessibilityLabel={`Choose ${label.toLowerCase()}`}
+              accessibilityLabel={t("picker.chooseA11y", {
+                field: label.toLowerCase(),
+              })}
               accessibilityRole="button"
               onPress={() => {
                 Keyboard.dismiss();
@@ -271,7 +275,7 @@ export function ControlledNumberPicker({
               <View style={styles.wheelModal}>
                 <View style={styles.wheelBackdrop}>
                   <Pressable
-                    accessibilityLabel="Close number picker"
+                    accessibilityLabel={t("picker.closeNumberA11y")}
                     accessibilityRole="button"
                     onPress={closePicker}
                     style={styles.wheelBackdropPressable}
@@ -310,7 +314,7 @@ export function ControlledNumberPicker({
                         type="smallBold"
                         style={styles.wheelDoneText}
                       >
-                        Done
+                        {t("common.done")}
                       </ThemedText>
                     </Pressable>
                   </View>
@@ -433,6 +437,8 @@ export function FieldLabel({
   label: string;
   optional?: boolean;
 }) {
+  const { t } = useLocalization();
+
   return (
     <View style={styles.labelRow}>
       <ThemedText type="smallBold" style={styles.label}>
@@ -440,7 +446,7 @@ export function FieldLabel({
       </ThemedText>
       {optional ? (
         <ThemedText type="small" style={styles.optionalText}>
-          Optional
+          {t("common.optional")}
         </ThemedText>
       ) : null}
     </View>

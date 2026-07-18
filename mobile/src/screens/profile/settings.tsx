@@ -1,70 +1,105 @@
-import { SymbolView } from "expo-symbols";
+import * as Haptics from "expo-haptics";
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View,
+} from "react-native";
+import Animated, {
+  Easing,
+  FadeInDown,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Spacing } from "@/constants/theme";
+import {
+  useLocalization,
+  type AppLocale,
+} from "@/features/localization/localization";
 import {
   Charcoal,
   Grapefruit,
   MutedText,
+  WarmSurface,
 } from "@/screens/main/styles";
 import { profile } from "./data";
-import { profileStyles as styles } from "./styles";
+import { profileSettingsStyles as styles } from "./settings-styles";
 
-const interestOptions = [
-  "Coffee walks",
-  "Startups",
-  "Gallery nights",
-  "Board games",
-  "Local food",
-  "Danube sunsets",
-  "Wellness",
-  "Networking",
-];
+const languageOptions = [
+  { id: "en", label: "English", short: "EN" },
+  { id: "sk", label: "Slovenčina", short: "SK" },
+  { id: "uk", label: "Українська", short: "UA" },
+  { id: "ru", label: "Русский", short: "RU" },
+] as const;
 
 export function ProfileSettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { locale, setLocale, t } = useLocalization();
   const [form, setForm] = useState({
     bio: profile.bio,
-    groupVibe: profile.details[2]?.value ?? "",
     instagram: profile.socials.find((social) => social.type === "instagram")
       ?.handle ?? "",
-    languages: profile.details[1]?.value ?? "",
     location: profile.location,
     name: profile.name,
-    neighborhood: profile.details[0]?.value ?? "",
-    role: profile.role,
     telegram: profile.socials.find((social) => social.type === "telegram")
       ?.handle ?? "",
   });
-  const [selectedInterests, setSelectedInterests] = useState(profile.interests);
 
   const updateField = (field: keyof typeof form, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const toggleInterest = (interest: string) => {
-    setSelectedInterests((current) =>
-      current.includes(interest)
-        ? current.filter((item) => item !== interest)
-        : [...current, interest],
-    );
+  const goBack = () => {
+    Keyboard.dismiss();
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/profile");
+  };
+
+  const saveProfile = () => {
+    Keyboard.dismiss();
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/profile");
+  };
+
+  const selectLanguage = (language: AppLocale) => {
+    Keyboard.dismiss();
+    void Haptics.selectionAsync();
+    void setLocale(language);
   };
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.screen} edges={["top"]}>
-        <View style={styles.settingsHeader}>
+        <View style={styles.header}>
           <Pressable
-            accessibilityLabel="Back to profile"
+            accessibilityLabel={t("settings.backA11y")}
             accessibilityRole="button"
-            onPress={() => router.replace("/profile")}
+            onPress={goBack}
             style={({ pressed }) => [
-              styles.headerIconButton,
+              styles.headerButton,
               pressed && styles.pressed,
             ]}
           >
@@ -74,190 +109,319 @@ export function ProfileSettingsScreen() {
                 android: "arrow_back",
                 web: "arrow_back",
               }}
-              size={20}
+              size={19}
               tintColor={Charcoal}
               weight="bold"
             />
           </Pressable>
-          <View style={styles.settingsTitleBlock}>
-            <ThemedText type="subtitle" style={styles.settingsTitle}>
-              Profile settings
+          <View style={styles.headerCopy}>
+            <ThemedText type="default" style={styles.headerTitle}>
+              {t("settings.title")}
             </ThemedText>
-            <ThemedText type="small" style={styles.settingsSubtitle}>
-              Edit public profile details
+            <ThemedText type="small" style={styles.headerSubtitle}>
+              {t("settings.subtitle")}
             </ThemedText>
           </View>
         </View>
 
-        <ScrollView
-          contentContainerStyle={[
-            styles.settingsContent,
-            { paddingBottom: insets.bottom + Spacing.four },
-          ]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.keyboardView}
         >
-          <View style={styles.formSection}>
-            <View style={styles.settingsPhotoRow}>
-              <View style={styles.settingsAvatar}>
-                <ThemedText type="smallBold" style={styles.settingsAvatarText}>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            keyboardDismissMode={
+              Platform.OS === "ios" ? "interactive" : "on-drag"
+            }
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <SettingsGroupHeader
+              delay={0}
+              subtitle={t("settings.profileGroup.subtitle")}
+              title={t("settings.profileGroup.title")}
+            />
+            <Animated.View
+              entering={FadeInDown.delay(30)
+                .duration(340)
+                .easing(Easing.out(Easing.cubic))}
+              style={styles.profilePreview}
+            >
+              <View style={styles.previewAvatar}>
+                <ThemedText type="smallBold" style={styles.previewAvatarText}>
                   {profile.initials}
                 </ThemedText>
               </View>
-              <View style={styles.photoCopy}>
-                <ThemedText type="default" style={styles.sectionTitle}>
-                  Profile photo
+              <View style={styles.previewCopy}>
+                <ThemedText type="subtitle" style={styles.previewName}>
+                  {form.name}
                 </ThemedText>
-                <ThemedText type="small" style={styles.location}>
-                  Use a clear face photo so people recognize you at events.
+                <ThemedText type="smallBold" style={styles.previewRole}>
+                  {form.instagram}
                 </ThemedText>
-                <Pressable
-                  accessibilityRole="button"
-                  style={({ pressed }) => [
-                    styles.photoAction,
-                    pressed && styles.pressed,
-                  ]}
+                <ThemedText
+                  type="small"
+                  style={styles.previewLocation}
+                  numberOfLines={1}
                 >
-                  <ThemedText type="smallBold" style={styles.photoActionText}>
-                    Change photo
-                  </ThemedText>
-                </Pressable>
+                  {form.location}
+                </ThemedText>
               </View>
-            </View>
-          </View>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  Keyboard.dismiss();
+                  void Haptics.impactAsync(
+                    Haptics.ImpactFeedbackStyle.Soft,
+                  );
+                }}
+                style={({ pressed }) => [
+                  styles.photoButton,
+                  pressed && styles.previewPressed,
+                ]}
+              >
+                <SymbolView
+                  name={{
+                    ios: "camera.fill",
+                    android: "photo_camera",
+                    web: "photo_camera",
+                  }}
+                  size={14}
+                  tintColor={Grapefruit}
+                  weight="bold"
+                />
+              </Pressable>
+            </Animated.View>
 
-          <SettingsSection title="Public info">
-            <SettingsInput
-              label="Name"
-              onChangeText={(value) => updateField("name", value)}
-              value={form.name}
-            />
-            <SettingsInput
-              label="Role"
-              onChangeText={(value) => updateField("role", value)}
-              value={form.role}
-            />
-            <SettingsInput
-              label="City / area"
-              onChangeText={(value) => updateField("location", value)}
-              value={form.location}
-            />
-            <SettingsInput
-              label="About me"
-              multiline
-              onChangeText={(value) => updateField("bio", value)}
-              value={form.bio}
-            />
-          </SettingsSection>
+            <SettingsSection
+              delay={70}
+              icon={{
+                ios: "person.crop.circle.fill",
+                android: "account_circle",
+                web: "account_circle",
+              }}
+              subtitle={t("settings.basics.subtitle")}
+              title={t("settings.basics.title")}
+            >
+              <SettingsInput
+                label={t("settings.field.name")}
+                onChangeText={(value) => updateField("name", value)}
+                value={form.name}
+              />
+              <SettingsInput
+                label={t("settings.field.city")}
+                onChangeText={(value) => updateField("location", value)}
+                value={form.location}
+              />
+              <SettingsInput
+                label={t("settings.field.about")}
+                multiline
+                onChangeText={(value) => updateField("bio", value)}
+                value={form.bio}
+              />
+            </SettingsSection>
 
-          <SettingsSection title="Socials">
-            <SettingsInput
-              label="Instagram"
-              onChangeText={(value) => updateField("instagram", value)}
-              value={form.instagram}
-            />
-            <SettingsInput
-              label="Telegram"
-              onChangeText={(value) => updateField("telegram", value)}
-              value={form.telegram}
-            />
-          </SettingsSection>
+            <SettingsSection
+              delay={110}
+              icon={{
+                ios: "bubble.left.and.bubble.right.fill",
+                android: "forum",
+                web: "forum",
+              }}
+              subtitle={t("settings.socials.subtitle")}
+              title={t("settings.socials.title")}
+            >
+              <SettingsInput
+                label={t("settings.field.instagram")}
+                onChangeText={(value) => updateField("instagram", value)}
+                value={form.instagram}
+              />
+              <SettingsInput
+                label={t("settings.field.telegram")}
+                onChangeText={(value) => updateField("telegram", value)}
+                value={form.telegram}
+              />
+            </SettingsSection>
 
-          <SettingsSection title="Meetup preferences">
-            <SettingsInput
-              label="Neighborhood"
-              onChangeText={(value) => updateField("neighborhood", value)}
-              value={form.neighborhood}
+            <SettingsGroupHeader
+              delay={150}
+              subtitle={t("settings.generalGroup.subtitle")}
+              title={t("settings.generalGroup.title")}
             />
-            <SettingsInput
-              label="Languages"
-              onChangeText={(value) => updateField("languages", value)}
-              value={form.languages}
-            />
-            <SettingsInput
-              label="Group vibe"
-              onChangeText={(value) => updateField("groupVibe", value)}
-              value={form.groupVibe}
-            />
-          </SettingsSection>
 
-          <SettingsSection title="Interests">
-            <View style={styles.chips}>
-              {interestOptions.map((interest) => {
-                const selected = selectedInterests.includes(interest);
+            <SettingsSection
+              delay={180}
+              icon={{
+                ios: "character.bubble.fill",
+                android: "translate",
+                web: "translate",
+              }}
+              subtitle={t("settings.language.subtitle")}
+              title={t("settings.language.title")}
+            >
+              <View style={styles.languageGrid}>
+                {languageOptions.map((language) => {
+                  const selected = locale === language.id;
 
-                return (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    key={interest}
-                    onPress={() => toggleInterest(interest)}
-                    style={({ pressed }) => [
-                      styles.chip,
-                      selected && styles.selectedChip,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <ThemedText
-                      type="smallBold"
-                      style={[
-                        styles.chipText,
-                        selected && styles.selectedChipText,
+                  return (
+                    <Pressable
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected }}
+                      key={language.id}
+                      onPress={() => selectLanguage(language.id)}
+                      style={({ pressed }) => [
+                        styles.language,
+                        selected && styles.languageSelected,
+                        pressed && styles.pressed,
                       ]}
                     >
-                      {interest}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </SettingsSection>
+                      <View
+                        style={[
+                          styles.languageCode,
+                          selected && styles.languageCodeSelected,
+                        ]}
+                      >
+                        <ThemedText
+                          type="smallBold"
+                          style={[
+                            styles.languageCodeText,
+                            selected && styles.languageTextSelected,
+                          ]}
+                        >
+                          {language.short}
+                        </ThemedText>
+                      </View>
+                      <ThemedText
+                        type="smallBold"
+                        style={[
+                          styles.languageText,
+                          selected && styles.languageTextSelected,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {language.label}
+                      </ThemedText>
+                      {selected ? (
+                        <SymbolView
+                          name={{
+                            ios: "checkmark",
+                            android: "check",
+                            web: "check",
+                          }}
+                          size={12}
+                          tintColor={WarmSurface}
+                          weight="bold"
+                        />
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </SettingsSection>
 
-          <View style={styles.settingsNote}>
-            <SymbolView
-              name={{ ios: "lock.fill", android: "lock", web: "lock" }}
-              size={18}
-              tintColor={Grapefruit}
-              weight="bold"
-            />
-            <ThemedText type="small" style={styles.settingsNoteText}>
-              Past events are part of profile history and cannot be edited here.
-            </ThemedText>
-          </View>
+          </ScrollView>
 
-          <View style={styles.saveBar}>
+          <View
+            style={[
+              styles.footer,
+              { paddingBottom: Math.max(insets.bottom, 12) },
+            ]}
+          >
             <Pressable
               accessibilityRole="button"
+              onPress={saveProfile}
               style={({ pressed }) => [
                 styles.saveButton,
-                pressed && styles.pressed,
+                pressed && styles.saveButtonPressed,
               ]}
             >
               <ThemedText type="smallBold" style={styles.saveButtonText}>
-                Save changes
+                {t("settings.save")}
               </ThemedText>
+              <SymbolView
+                name={{
+                  ios: "checkmark",
+                  android: "check",
+                  web: "check",
+                }}
+                size={16}
+                tintColor={WarmSurface}
+                weight="bold"
+              />
             </Pressable>
           </View>
-        </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ThemedView>
   );
 }
 
-function SettingsSection({
-  children,
+function SettingsGroupHeader({
+  delay,
+  subtitle,
   title,
 }: {
-  children: React.ReactNode;
+  delay: number;
+  subtitle: string;
   title: string;
 }) {
   return (
-    <View style={styles.formSection}>
-      <ThemedText type="default" style={styles.sectionTitle}>
+    <Animated.View
+      entering={FadeInDown.delay(delay)
+        .duration(300)
+        .easing(Easing.out(Easing.cubic))}
+      style={styles.groupHeader}
+    >
+      <ThemedText type="subtitle" style={styles.groupTitle}>
         {title}
       </ThemedText>
-      {children}
-    </View>
+      <ThemedText type="small" style={styles.groupSubtitle}>
+        {subtitle}
+      </ThemedText>
+    </Animated.View>
+  );
+}
+
+function SettingsSection({
+  children,
+  delay,
+  icon,
+  subtitle,
+  title,
+}: {
+  children: React.ReactNode;
+  delay: number;
+  icon: SymbolViewProps["name"];
+  subtitle: string;
+  title: string;
+}) {
+  return (
+    <Animated.View
+      entering={FadeInDown.duration(340)
+        .delay(delay)
+        .easing(Easing.out(Easing.cubic))}
+      style={styles.section}
+    >
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIcon}>
+          <SymbolView
+            name={icon}
+            size={17}
+            tintColor={Grapefruit}
+            weight="bold"
+          />
+        </View>
+        <View style={styles.sectionCopy}>
+          <ThemedText type="default" style={styles.sectionTitle}>
+            {title}
+          </ThemedText>
+          <ThemedText type="small" style={styles.sectionSubtitle}>
+            {subtitle}
+          </ThemedText>
+        </View>
+      </View>
+      <View style={styles.sectionBody}>{children}</View>
+    </Animated.View>
   );
 }
 
@@ -272,18 +436,54 @@ function SettingsInput({
   onChangeText: (value: string) => void;
   value: string;
 }) {
+  const [focused, setFocused] = useState(false);
+  const focusProgress = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      focusProgress.value,
+      [0, 1],
+      ["#F5F1EF", "#FFFCFB"],
+    ),
+    borderColor: interpolateColor(
+      focusProgress.value,
+      [0, 1],
+      ["rgba(255, 90, 95, 0)", Grapefruit],
+    ),
+  }));
+
+  const setInputFocused = (nextFocused: boolean) => {
+    setFocused(nextFocused);
+    focusProgress.set(
+      withTiming(nextFocused ? 1 : 0, {
+        duration: nextFocused ? 180 : 130,
+      }),
+    );
+  };
+
   return (
-    <View style={styles.fieldGroup}>
-      <ThemedText type="smallBold" style={styles.fieldLabel}>
+    <Animated.View
+      style={[
+        styles.inputShell,
+        multiline && styles.inputShellMultiline,
+        animatedStyle,
+      ]}
+    >
+      <ThemedText
+        type="smallBold"
+        style={[styles.inputLabel, focused && styles.inputLabelFocused]}
+      >
         {label}
       </ThemedText>
       <TextInput
         multiline={multiline}
+        onBlur={() => setInputFocused(false)}
         onChangeText={onChangeText}
+        onFocus={() => setInputFocused(true)}
         placeholderTextColor={MutedText}
+        selectionColor={Grapefruit}
         style={[styles.input, multiline && styles.textArea]}
         value={value}
       />
-    </View>
+    </Animated.View>
   );
 }

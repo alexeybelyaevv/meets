@@ -60,26 +60,34 @@ export function toEventDateTimeValue(
   )}`;
 }
 
-export function formatEventDate(value: string | undefined) {
+export function formatEventDate(
+  value: string | undefined,
+  locale?: string,
+  emptyLabel = "Choose date",
+) {
   if (!value) {
-    return "Choose date";
+    return emptyLabel;
   }
 
   const date = parseEventDateTimeValue(value, "date");
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
   }).format(date);
 }
 
-export function formatEventTime(value: string | undefined) {
+export function formatEventTime(
+  value: string | undefined,
+  locale?: string,
+  emptyLabel = "Choose time",
+) {
   if (!value) {
-    return "Choose time";
+    return emptyLabel;
   }
 
   const time = parseEventDateTimeValue(value, "time");
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
   }).format(time);

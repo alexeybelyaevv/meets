@@ -11,6 +11,7 @@ import {
   AuthTextField,
 } from "@/features/auth/components/auth-ui";
 import { SocialLoginButtons } from "@/features/auth/components/SocialLoginButtons";
+import { useLocalization } from "@/features/localization/localization";
 
 type AuthMode = "login" | "signup";
 const heroGradient = require("@/assets/images/login-hero-gradient.png");
@@ -18,6 +19,7 @@ const meetsWordmark = require("@/assets/images/meets-wordmark.svg");
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { t } = useLocalization();
   const [mode, setMode] = useState<AuthMode>("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -66,7 +68,7 @@ export default function LoginScreen() {
           <View style={styles.formShell}>
             <View style={styles.formHeader}>
               <ThemedText type="subtitle" style={styles.formTitle}>
-                {isLogin ? "Welcome back" : "Create account"}
+                {isLogin ? t("auth.welcomeBack") : t("auth.createAccount")}
               </ThemedText>
               {!isLogin ? (
                 <Pressable
@@ -74,7 +76,7 @@ export default function LoginScreen() {
                   style={({ pressed }) => [pressed && styles.pressed]}
                 >
                   <ThemedText type="small" style={styles.backText}>
-                    Back to login
+                    {t("auth.backToLogin")}
                   </ThemedText>
                 </Pressable>
               ) : null}
@@ -85,7 +87,7 @@ export default function LoginScreen() {
                 <InputRow
                   icon={{ ios: "person", android: "person", web: "person" }}
                   onChangeText={setName}
-                  placeholder="Name"
+                  placeholder={t("auth.name")}
                   returnKeyType="next"
                   textContentType="name"
                   value={name}
@@ -96,7 +98,7 @@ export default function LoginScreen() {
               <InputRow
                 icon={{ ios: "envelope", android: "email", web: "mail" }}
                 onChangeText={setEmail}
-                placeholder="Email"
+                placeholder={t("auth.email")}
                 returnKeyType="next"
                 textContentType="emailAddress"
                 value={email}
@@ -108,7 +110,7 @@ export default function LoginScreen() {
               <InputRow
                 icon={{ ios: "lock", android: "lock", web: "lock" }}
                 onChangeText={setPassword}
-                placeholder="Password"
+                placeholder={t("auth.password")}
                 returnKeyType={isLogin ? "done" : "next"}
                 secureTextEntry
                 textContentType="password"
@@ -121,7 +123,7 @@ export default function LoginScreen() {
                 <InputRow
                   icon={{ ios: "lock", android: "lock", web: "lock" }}
                   onChangeText={setConfirmPassword}
-                  placeholder="Confirm password"
+                  placeholder={t("auth.confirmPassword")}
                   returnKeyType="done"
                   secureTextEntry
                   textContentType="password"
@@ -140,20 +142,20 @@ export default function LoginScreen() {
                 ]}
               >
                 <ThemedText type="small" style={styles.forgotText}>
-                  Forgot Password
+                  {t("auth.forgotPassword")}
                 </ThemedText>
               </Pressable>
             ) : null}
 
             <AuthButton
-              label={isLogin ? "Login" : "Sign Up"}
+              label={isLogin ? t("auth.login") : t("auth.signUp")}
               onPress={handleSubmit}
             />
 
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <ThemedText type="small" style={styles.dividerText}>
-                Or login with
+                {t("auth.orLoginWith")}
               </ThemedText>
               <View style={styles.dividerLine} />
             </View>
@@ -162,14 +164,14 @@ export default function LoginScreen() {
 
             <View style={styles.footerRow}>
               <ThemedText type="small" style={styles.footerText}>
-                {isLogin ? "Don't have account?" : "Already have account?"}
+                {isLogin ? t("auth.noAccount") : t("auth.hasAccount")}
               </ThemedText>
               <Pressable
                 onPress={() => setMode(isLogin ? "signup" : "login")}
                 style={({ pressed }) => [pressed && styles.pressed]}
               >
                 <ThemedText type="smallBold" style={styles.footerLink}>
-                  {isLogin ? "Sign Up" : "Login"}
+                  {isLogin ? t("auth.signUp") : t("auth.login")}
                 </ThemedText>
               </Pressable>
             </View>

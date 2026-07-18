@@ -17,6 +17,12 @@ import { Spacing } from "@/constants/theme";
 import { getTestEventImage } from "../data/event-images";
 import type { FeaturedPlan } from "../types";
 import { PlanDetailBody, PlanDetailHeader } from "./plan-detail-content";
+import { useLocalization } from "@/features/localization/localization";
+import {
+  localizeEventCategory,
+  localizeEventPrice,
+  localizeEventTimeLabel,
+} from "@/features/events/lib/event-display";
 import {
   Charcoal,
   Grapefruit,
@@ -171,6 +177,7 @@ function PlanCard({
   onSelectPlan: (planId: string) => void;
   plan: FeaturedPlan;
 }) {
+  const { t } = useLocalization();
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -199,7 +206,7 @@ function PlanCard({
     >
       <Animated.View style={animatedStyle}>
         <Pressable
-          accessibilityLabel={`Open ${plan.title}`}
+          accessibilityLabel={t("events.openA11y", { title: plan.title })}
           accessibilityRole="button"
           onPress={selectPlan}
           onPressIn={() => setPressed(true)}
@@ -219,7 +226,7 @@ function PlanCard({
                 numberOfLines={1}
                 style={styles.planImageTagText}
               >
-                {plan.tag}
+                {localizeEventCategory(plan.tag, t)}
               </ThemedText>
             </View>
           </View>
@@ -230,7 +237,7 @@ function PlanCard({
               style={styles.planTime}
               numberOfLines={1}
             >
-              {plan.timeLabel}
+              {localizeEventTimeLabel(plan.timeLabel, t)}
             </ThemedText>
             <ThemedText
               type="default"
@@ -273,12 +280,12 @@ function PlanCard({
                   weight="medium"
                 />
                 <ThemedText type="smallBold" style={styles.planAttendanceText}>
-                  {plan.attendeeCount} going
+                  {t("events.going", { count: plan.attendeeCount })}
                 </ThemedText>
               </View>
               <View style={styles.planPricePill}>
                 <ThemedText type="smallBold" style={styles.planPrice}>
-                  {plan.price}
+                  {localizeEventPrice(plan.price, t)}
                 </ThemedText>
               </View>
             </View>

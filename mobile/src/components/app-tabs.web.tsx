@@ -12,18 +12,21 @@ import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useLocalization } from '@/features/localization/localization';
 
 export default function AppTabs() {
+  const { t } = useLocalization();
+
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
         <CustomTabList>
           <TabTrigger name="home" href="/" asChild>
-            <TabButton>Map</TabButton>
+            <TabButton>{t('nav.map')}</TabButton>
           </TabTrigger>
           <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
+            <TabButton>{t('nav.explore')}</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>

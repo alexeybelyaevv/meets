@@ -1,11 +1,14 @@
 import { PlaceholderTabScreen } from '@/components/placeholder-tab-screen';
+import { useLocalization } from '@/features/localization/localization';
 
 export default function SavedScreen() {
+  const { t } = useLocalization();
+
   return (
     <PlaceholderTabScreen
-      eyebrow="Saved"
-      title="Save events for later."
-      body="This placeholder will become a shortlist of places, hosts, and events you want to revisit."
+      eyebrow={t('saved.eyebrow')}
+      title={t('saved.title')}
+      body={t('saved.body')}
       icon={{ ios: 'heart.fill', android: 'favorite', web: 'favorite' }}
     />
   );

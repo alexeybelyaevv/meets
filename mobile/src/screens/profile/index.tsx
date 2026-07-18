@@ -1,6 +1,11 @@
+import * as Haptics from "expo-haptics";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
+import Animated, {
+  Easing,
+  FadeInDown,
+} from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   BottomNavigation,
@@ -8,9 +13,52 @@ import {
 } from "@/components/bottom-navigation";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Grapefruit } from "@/screens/main/styles";
-import { profile, type PastProfileEvent, type ProfileSocial } from "./data";
+import {
+  useLocalization,
+  type TranslationKey,
+} from "@/features/localization/localization";
+import {
+  Charcoal,
+  Grapefruit,
+  MutedText,
+  WarmSurface,
+} from "@/screens/main/styles";
+import { profile, type ProfileSocial } from "./data";
 import { profileStyles as styles } from "./styles";
+
+const activityItems: {
+  descriptionKey: TranslationKey;
+  icon: SymbolViewProps["name"];
+  titleKey: TranslationKey;
+}[] = [
+  {
+    descriptionKey: "profile.activity.hosted",
+    icon: {
+      ios: "sparkles",
+      android: "auto_awesome",
+      web: "auto_awesome",
+    },
+    titleKey: "profile.stats.hosted",
+  },
+  {
+    descriptionKey: "profile.activity.joined",
+    icon: {
+      ios: "person.2.fill",
+      android: "groups",
+      web: "groups",
+    },
+    titleKey: "profile.stats.joined",
+  },
+  {
+    descriptionKey: "profile.activity.saved",
+    icon: {
+      ios: "heart.fill",
+      android: "favorite",
+      web: "favorite",
+    },
+    titleKey: "saved.eyebrow",
+  },
+];
 
 export function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -20,17 +68,17 @@ export function ProfileScreen() {
       <SafeAreaView style={styles.screen} edges={["top"]}>
         <ScrollView
           contentContainerStyle={[
-            styles.content,
+            styles.profileContent,
             { paddingBottom: BottomNavigationInset + insets.bottom },
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <ProfileHero />
-          <DetailsSection />
-          <SocialsSection />
-          <InterestsSection />
-          <TrustSection />
-          <PastEventsSection />
+          <Reveal delay={0}>
+            <ProfileIntro />
+          </Reveal>
+          <Reveal delay={80}>
+            <ActivitySection />
+          </Reveal>
         </ScrollView>
       </SafeAreaView>
       <BottomNavigation />
@@ -38,248 +86,224 @@ export function ProfileScreen() {
   );
 }
 
-function ProfileHero() {
+function ProfileIntro() {
   const router = useRouter();
+  const { t } = useLocalization();
+
+  const openSettings = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+    router.push("/profile/settings");
+  };
 
   return (
-    <View style={styles.hero}>
-      <View style={styles.heroTop}>
-        <View style={styles.avatarWrap}>
-          <View style={styles.avatar}>
-            <ThemedText type="smallBold" style={styles.avatarText}>
-              {profile.initials}
-            </ThemedText>
-          </View>
-          <Pressable
-            accessibilityLabel="Change profile photo"
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.photoButton,
-              pressed && styles.pressed,
-            ]}
-          >
-            <SymbolView
-              name={{ ios: "camera.fill", android: "photo_camera", web: "photo_camera" }}
-              size={16}
-              tintColor={Grapefruit}
-              weight="bold"
-            />
-          </Pressable>
-        </View>
+    <View style={styles.profileIntro}>
+      <View style={styles.profileTopBar}>
+        <ThemedText type="default" style={styles.profileScreenTitle}>
+          {t("profile.title")}
+        </ThemedText>
+        <Pressable
+          accessibilityLabel={t("profile.openSettingsA11y")}
+          accessibilityRole="button"
+          onPress={openSettings}
+          style={({ pressed }) => [
+            styles.profileSettingsButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <SymbolView
+            name={{
+              ios: "slider.horizontal.3",
+              android: "tune",
+              web: "tune",
+            }}
+            size={18}
+            tintColor={Charcoal}
+            weight="bold"
+          />
+        </Pressable>
+      </View>
 
-        <View style={styles.heroCopy}>
-          <View style={styles.nameRow}>
-            <ThemedText type="subtitle" style={styles.name} numberOfLines={1}>
-              {profile.name}
-            </ThemedText>
-            <Pressable
-              accessibilityLabel="Open profile settings"
-              accessibilityRole="button"
-              onPress={() => router.push("/profile/settings")}
-              style={({ pressed }) => [
-                styles.settingsButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <SymbolView
-                name={{
-                  ios: "gearshape.fill",
-                  android: "settings",
-                  web: "settings",
-                }}
-                size={19}
-                tintColor="#201A1A"
-                weight="bold"
-              />
-            </Pressable>
-          </View>
-          <ThemedText type="smallBold" style={styles.role}>
-            {profile.role}
+      <View style={styles.profileIdentity}>
+        <View style={styles.profileIdentityCopy}>
+          <ThemedText type="title" style={styles.profileName}>
+            {profile.name}
           </ThemedText>
-          <View style={styles.locationRow}>
+          <View style={styles.profileLocationRow}>
             <SymbolView
               name={{
                 ios: "location.fill",
                 android: "location_on",
                 web: "location_on",
               }}
-              size={15}
-              tintColor="#766F6B"
+              size={13}
+              tintColor={MutedText}
               weight="bold"
             />
-            <ThemedText type="small" style={styles.location} numberOfLines={1}>
+            <ThemedText
+              type="small"
+              style={styles.profileLocation}
+              numberOfLines={1}
+            >
               {profile.location}
             </ThemedText>
           </View>
-          <ThemedText type="small" style={styles.location}>
-            {profile.memberSince}
-          </ThemedText>
         </View>
-      </View>
 
-      <ThemedText type="default" style={styles.bio}>
-        {profile.bio}
-      </ThemedText>
-
-      <View style={styles.statsRow}>
-        {profile.stats.map((stat) => (
-          <View key={stat.label} style={styles.stat}>
-            <ThemedText type="subtitle" style={styles.statValue}>
-              {stat.value}
-            </ThemedText>
-            <ThemedText type="small" style={styles.statLabel}>
-              {stat.label}
-            </ThemedText>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-function DetailsSection() {
-  return (
-    <ProfileSection title="About">
-      {profile.details.map((detail) => (
-        <View key={detail.label} style={styles.detailRow}>
-          <ThemedText type="small" style={styles.detailLabel}>
-            {detail.label}
+        <Pressable
+          accessibilityLabel={t("profile.changePhotoA11y")}
+          accessibilityRole="button"
+          onPress={openSettings}
+          style={({ pressed }) => [
+            styles.profileAvatar,
+            pressed && styles.pressed,
+          ]}
+        >
+          <ThemedText type="smallBold" style={styles.profileAvatarText}>
+            {profile.initials}
           </ThemedText>
-          <ThemedText type="smallBold" style={styles.detailValue}>
-            {detail.value}
-          </ThemedText>
-        </View>
-      ))}
-    </ProfileSection>
-  );
-}
-
-function SocialsSection() {
-  return (
-    <ProfileSection title="Socials">
-      <View style={styles.socialRow}>
-        {profile.socials.map((social) => (
-          <SocialButton key={social.type} social={social} />
-        ))}
-      </View>
-    </ProfileSection>
-  );
-}
-
-function SocialButton({ social }: { social: ProfileSocial }) {
-  const icon = getSocialIcon(social.type);
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.socialButton, pressed && styles.pressed]}
-    >
-      <View style={styles.socialIcon}>
-        <SymbolView name={icon} size={17} tintColor={Grapefruit} weight="bold" />
-      </View>
-      <View style={styles.socialTextBlock}>
-        <ThemedText type="smallBold" style={styles.socialLabel} numberOfLines={1}>
-          {social.label}
-        </ThemedText>
-        <ThemedText type="small" style={styles.socialHandle} numberOfLines={1}>
-          {social.handle}
-        </ThemedText>
-      </View>
-    </Pressable>
-  );
-}
-
-function InterestsSection() {
-  return (
-    <ProfileSection title="Interests">
-      <View style={styles.chips}>
-        {profile.interests.map((interest) => (
-          <View key={interest} style={styles.chip}>
-            <ThemedText type="smallBold" style={styles.chipText}>
-              {interest}
-            </ThemedText>
-          </View>
-        ))}
-      </View>
-    </ProfileSection>
-  );
-}
-
-function TrustSection() {
-  return (
-    <ProfileSection title="Good to know">
-      {profile.trust.map((item) => (
-        <View key={item} style={styles.trustRow}>
-          <View style={styles.trustIcon}>
+          <View style={styles.profileAvatarAction}>
             <SymbolView
-              name={{ ios: "checkmark", android: "check", web: "check" }}
-              size={15}
-              tintColor={Grapefruit}
+              name={{
+                ios: "camera.fill",
+                android: "photo_camera",
+                web: "photo_camera",
+              }}
+              size={12}
+              tintColor={WarmSurface}
               weight="bold"
             />
           </View>
-          <ThemedText type="small" style={styles.trustText}>
-            {item}
-          </ThemedText>
+        </Pressable>
+      </View>
+
+      <View style={styles.profileStatement}>
+        <View style={styles.profileStatementLine} />
+        <ThemedText type="default" style={styles.profileBio}>
+          {profile.bio}
+        </ThemedText>
+      </View>
+
+      <View style={styles.profileIntroFooter}>
+        <View style={styles.profileSocials}>
+          {profile.socials.map((social) => (
+            <SocialItem key={social.type} social={social} />
+          ))}
         </View>
-      ))}
-    </ProfileSection>
+        <Pressable
+          accessibilityRole="button"
+          onPress={openSettings}
+          style={({ pressed }) => [
+            styles.profileEditButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <ThemedText type="smallBold" style={styles.profileEditButtonText}>
+            {t("profile.edit")}
+          </ThemedText>
+          <SymbolView
+            name={{
+              ios: "arrow.up.right",
+              android: "north_east",
+              web: "north_east",
+            }}
+            size={14}
+            tintColor={WarmSurface}
+            weight="bold"
+          />
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
-function PastEventsSection() {
+function SocialItem({ social }: { social: ProfileSocial }) {
   return (
-    <ProfileSection title="Past events">
-      {profile.pastEvents.map((event) => (
-        <PastEventCard key={event.id} event={event} />
-      ))}
-    </ProfileSection>
-  );
-}
-
-function PastEventCard({ event }: { event: PastProfileEvent }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.eventCard, pressed && styles.pressed]}
-    >
-      <View style={styles.eventDate}>
-        <ThemedText type="smallBold" style={styles.eventDateText}>
-          {event.date}
-        </ThemedText>
-      </View>
-      <View style={styles.eventCopy}>
-        <ThemedText type="default" style={styles.eventTitle} numberOfLines={1}>
-          {event.title}
-        </ThemedText>
-        <ThemedText type="small" style={styles.eventMeta} numberOfLines={1}>
-          {event.venue} · {event.attendees} joined
-        </ThemedText>
-      </View>
+    <View style={styles.profileSocial}>
       <SymbolView
-        name={{ ios: "chevron.right", android: "chevron_right", web: "chevron_right" }}
-        size={18}
-        tintColor="#766F6B"
+        name={getSocialIcon(social.type)}
+        size={14}
+        tintColor={Grapefruit}
         weight="bold"
       />
-    </Pressable>
+      <View style={styles.profileSocialCopy}>
+        <ThemedText type="small" style={styles.profileSocialLabel}>
+          {social.label}
+        </ThemedText>
+        <ThemedText
+          numberOfLines={1}
+          type="smallBold"
+          style={styles.profileSocialHandle}
+        >
+          {social.handle}
+        </ThemedText>
+      </View>
+    </View>
   );
 }
 
-function ProfileSection({
+function ActivitySection() {
+  const { t } = useLocalization();
+
+  return (
+    <View style={styles.profileSection}>
+      <View style={styles.profileSectionHeader}>
+        <ThemedText type="subtitle" style={styles.profileSectionTitle}>
+          {t("profile.activity.title")}
+        </ThemedText>
+        <ThemedText type="small" style={styles.profileSectionSubtitle}>
+          {t("profile.activity.subtitle")}
+        </ThemedText>
+      </View>
+      <View style={styles.profileActivityList}>
+        {activityItems.map((item, index) => (
+          <View key={item.titleKey} style={styles.profileActivityRow}>
+            <View style={styles.profileActivityIcon}>
+              <SymbolView
+                name={item.icon}
+                size={17}
+                tintColor={Grapefruit}
+                weight="bold"
+              />
+            </View>
+            <View style={styles.profileActivityCopy}>
+              <ThemedText
+                type="default"
+                style={styles.profileActivityTitle}
+              >
+                {t(item.titleKey)}
+              </ThemedText>
+              <ThemedText
+                type="small"
+                style={styles.profileActivityDescription}
+              >
+                {t(item.descriptionKey)}
+              </ThemedText>
+            </View>
+            {index < activityItems.length - 1 ? (
+              <View style={styles.profileActivityDivider} />
+            ) : null}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function Reveal({
   children,
-  title,
+  delay,
 }: {
   children: React.ReactNode;
-  title: string;
+  delay: number;
 }) {
   return (
-    <View style={styles.section}>
-      <ThemedText type="default" style={styles.sectionTitle}>
-        {title}
-      </ThemedText>
+    <Animated.View
+      entering={FadeInDown.duration(340)
+        .delay(delay)
+        .easing(Easing.out(Easing.cubic))}
+    >
       {children}
-    </View>
+    </Animated.View>
   );
 }
 
