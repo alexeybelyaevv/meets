@@ -17,33 +17,66 @@ import { Spacing } from "@/constants/theme";
 import {
   Charcoal,
   Grapefruit,
+  GrapefruitSoft,
+  MutedText,
   WarmSurface,
   styles,
 } from "../styles";
 
+export type WhenPreset =
+  | "anytime"
+  | "today"
+  | "tomorrow"
+  | "weekend"
+  | "custom";
+
+export type PriceMode = "all" | "free" | "pay-on-site" | "host-fee";
+
+export type FilterState = {
+  availability: {
+    instantJoinOnly: boolean;
+    openSpotsOnly: boolean;
+  };
+  categoryIds: string[];
+  priceMode: PriceMode;
+  when: {
+    end: Date | null;
+    preset: WhenPreset;
+    start: Date;
+  };
+};
+
 type FiltersOverlayProps = {
   closeFilters: () => void;
+  filters: FilterState;
   filtersContentProgress: SharedValue<number>;
   filtersExpandedHeight: number;
   filtersProgress: SharedValue<number>;
+  onApplyFilters: (filters: FilterState) => void;
   searchSubtitle?: string;
   searchTitle?: string;
   searchBarWidth: number;
-  submitLabel?: string;
   topOverlayOffset: number;
 };
 
 export function FiltersOverlay({
   closeFilters,
+  filters,
   filtersContentProgress,
   filtersExpandedHeight,
   filtersProgress,
+  onApplyFilters,
   searchSubtitle = "Anywhere · any time · filters",
   searchTitle = "Search plans",
   searchBarWidth,
-  submitLabel = "Show 24 plans",
   topOverlayOffset,
 }: FiltersOverlayProps) {
+  const [draftFilters, setDraftFilters] = useState<FilterState>(() =>
+    cloneFilterState(filters),
+  );
+  const [resetVersion, setResetVersion] = useState(0);
+  const appliedFilterCount = getActiveFilterCount(filters);
+  const draftFilterCount = getActiveFilterCount(draftFilters);
   const filtersMorphSurfaceAnimatedStyle = useAnimatedStyle(() => ({
     opacity: interpolate(filtersProgress.value, [0, 0.05, 1], [0, 1, 1]),
     left: Spacing.three,
@@ -109,6 +142,17 @@ export function FiltersOverlay({
     filtersContentProgress,
     0.4,
   );
+  const commitAndClose = () => {
+    onApplyFilters(normalizeFilterState(draftFilters));
+    closeFilters();
+  };
+  const resetFilters = () => {
+    const resetState = createDefaultFilterState();
+
+    setDraftFilters(resetState);
+    onApplyFilters(cloneFilterState(resetState));
+    setResetVersion((version) => version + 1);
+  };
 
   return (
     <Animated.View style={styles.filtersOverlay}>
@@ -123,7 +167,11 @@ export function FiltersOverlay({
         <Animated.View
           style={[styles.filtersMorphBarGhost, filtersBarGhostAnimatedStyle]}
         >
-          <SearchGhost title={searchTitle} subtitle={searchSubtitle} />
+          <SearchGhost
+            activeFilterCount={appliedFilterCount}
+            title={searchTitle}
+            subtitle={searchSubtitle}
+          />
         </Animated.View>
       </Animated.View>
       <Animated.View
@@ -135,10 +183,10 @@ export function FiltersOverlay({
       >
         <View style={styles.filtersHeader}>
           <Pressable
-            accessibilityLabel="Close filters"
+            accessibilityLabel="Done filtering"
             accessibilityRole="button"
             hitSlop={10}
-            onPress={closeFilters}
+            onPress={commitAndClose}
             style={({ pressed }) => [
               styles.filtersCloseButton,
               pressed && styles.pressed,
@@ -146,19 +194,22 @@ export function FiltersOverlay({
           >
             <SymbolView
               name={{
-                ios: "xmark",
-                android: "close",
-                web: "close",
+                ios: "checkmark",
+                android: "check",
+                web: "check",
               }}
               size={18}
-              tintColor={Charcoal}
+              tintColor={Grapefruit}
               weight="bold"
             />
           </Pressable>
           <ThemedText type="default" style={styles.filtersHeaderTitle}>
             Filters
           </ThemedText>
-          <View style={styles.filtersHeaderSpacer} />
+          <FiltersResetButton
+            disabled={draftFilterCount === 0}
+            onPress={resetFilters}
+          />
         </View>
 
         <ScrollView
@@ -170,13 +221,32 @@ export function FiltersOverlay({
         >
           <WhenFilterSection
             animatedStyle={whenSectionAnimatedStyle}
+            key={`when-${resetVersion}`}
+            onChange={(when) =>
+              setDraftFilters((current) => ({ ...current, when }))
+            }
+            value={draftFilters.when}
           />
           <CategoryFilterSection
             animatedStyle={categorySectionAnimatedStyle}
+            onChange={(categoryIds) =>
+              setDraftFilters((current) => ({ ...current, categoryIds }))
+            }
+            value={draftFilters.categoryIds}
           />
-          <PriceFilterSection animatedStyle={priceSectionAnimatedStyle} />
+          <PriceFilterSection
+            animatedStyle={priceSectionAnimatedStyle}
+            onChange={(priceMode) =>
+              setDraftFilters((current) => ({ ...current, priceMode }))
+            }
+            value={draftFilters.priceMode}
+          />
           <AvailabilityFilterSection
             animatedStyle={availabilitySectionAnimatedStyle}
+            onChange={(availability) =>
+              setDraftFilters((current) => ({ ...current, availability }))
+            }
+            value={draftFilters.availability}
           />
         </ScrollView>
 
@@ -184,7 +254,8 @@ export function FiltersOverlay({
           style={[styles.filtersSubmitWrap, filtersSubmitAnimatedStyle]}
         >
           <Pressable
-            onPress={closeFilters}
+            accessibilityRole="button"
+            onPress={commitAndClose}
             style={({ pressed }) => [
               styles.filtersSubmitButton,
               pressed && styles.pressed,
@@ -192,36 +263,98 @@ export function FiltersOverlay({
           >
             <SymbolView
               name={{
-                ios: "magnifyingglass",
-                android: "search",
-                web: "search",
+                ios: "checkmark",
+                android: "check",
+                web: "check",
               }}
               size={18}
               tintColor={WarmSurface}
               weight="bold"
             />
             <ThemedText type="smallBold" style={styles.filtersSubmitText}>
-              {submitLabel}
+              Apply filters
             </ThemedText>
           </Pressable>
-          <View style={{ height: 18 }} />
+          <View style={styles.filtersSubmitBottomSpacer} />
         </Animated.View>
       </Animated.View>
     </Animated.View>
   );
 }
 
-type WhenPreset = "anytime" | "today" | "tomorrow" | "weekend" | "custom";
+function FiltersResetButton({
+  disabled,
+  onPress,
+}: {
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  const activeProgress = useSharedValue(disabled ? 0 : 1);
 
-function WhenFilterSection({ animatedStyle }: { animatedStyle: object }) {
+  useEffect(() => {
+    activeProgress.value = withTiming(disabled ? 0 : 1, {
+      duration: 160,
+    });
+  }, [activeProgress, disabled]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      activeProgress.value,
+      [0, 1],
+      ["rgba(255, 90, 95, 0)", GrapefruitSoft],
+    ),
+    opacity: interpolate(activeProgress.value, [0, 1], [0.35, 1]),
+    transform: [
+      {
+        scale: interpolate(activeProgress.value, [0, 1], [0.92, 1]),
+      },
+    ],
+  }));
+
+  return (
+    <Animated.View style={[styles.filtersResetButton, animatedStyle]}>
+      <Pressable
+        accessibilityLabel="Reset all filters"
+        accessibilityRole="button"
+        accessibilityState={{ disabled }}
+        disabled={disabled}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.filtersResetButtonPressable,
+          pressed && styles.pressed,
+        ]}
+      >
+        <SymbolView
+          name={{
+            ios: "arrow.counterclockwise",
+            android: "restart_alt",
+            web: "restart_alt",
+          }}
+          size={17}
+          tintColor={disabled ? MutedText : Grapefruit}
+          weight="bold"
+        />
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+function WhenFilterSection({
+  animatedStyle,
+  onChange,
+  value,
+}: {
+  animatedStyle: object;
+  onChange: (value: FilterState["when"]) => void;
+  value: FilterState["when"];
+}) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const tomorrow = useMemo(() => addDays(today, 1), [today]);
   const weekendStart = useMemo(() => getWeekendStart(today), [today]);
   const weekendEnd = useMemo(() => addDays(weekendStart, 1), [weekendStart]);
-  const [selectedPreset, setSelectedPreset] =
-    useState<WhenPreset>("anytime");
-  const [rangeStart, setRangeStart] = useState(today);
-  const [rangeEnd, setRangeEnd] = useState<Date | null>(today);
+  const selectedPreset = value.preset;
+  const rangeStart = value.start;
+  const rangeEnd = value.end;
   const [visibleMonth, setVisibleMonth] = useState(startOfMonth(today));
   const [calendarOpen, setCalendarOpen] = useState(false);
   const calendarDays = useMemo(
@@ -266,10 +399,10 @@ function WhenFilterSection({ animatedStyle }: { animatedStyle: object }) {
     end?: Date,
   ) => {
     if (start && end) {
-      setRangeStart(start);
-      setRangeEnd(end);
+      onChange({ end, preset, start });
+    } else {
+      onChange({ ...value, preset });
     }
-    setSelectedPreset(preset);
     setCalendarOpen(false);
   };
 
@@ -282,24 +415,20 @@ function WhenFilterSection({ animatedStyle }: { animatedStyle: object }) {
 
   const selectCalendarDay = (date: Date) => {
     if (selectedPreset !== "custom" || rangeEnd) {
-      setRangeStart(date);
-      setRangeEnd(null);
-      setSelectedPreset("custom");
+      onChange({ end: null, preset: "custom", start: date });
       return;
     }
 
     if (date.getTime() < rangeStart.getTime()) {
-      setRangeStart(date);
+      onChange({ ...value, start: date });
       return;
     }
 
-    setRangeEnd(date);
+    onChange({ ...value, end: date });
   };
 
   const resetCalendarRange = () => {
-    setSelectedPreset("anytime");
-    setRangeStart(today);
-    setRangeEnd(today);
+    onChange({ end: today, preset: "anytime", start: today });
     setVisibleMonth(startOfMonth(today));
   };
 
@@ -618,8 +747,6 @@ function FilterSegmentOption({
   );
 }
 
-type PriceMode = "all" | "free" | "pay-on-site" | "host-fee";
-
 const PRICE_OPTIONS: {
   accessibilityLabel?: string;
   key: PriceMode;
@@ -639,9 +766,15 @@ const PRICE_OPTIONS: {
   },
 ];
 
-function PriceFilterSection({ animatedStyle }: { animatedStyle: object }) {
-  const [selectedMode, setSelectedMode] = useState<PriceMode>("all");
-
+function PriceFilterSection({
+  animatedStyle,
+  onChange,
+  value,
+}: {
+  animatedStyle: object;
+  onChange: (value: PriceMode) => void;
+  value: PriceMode;
+}) {
   return (
     <Animated.View
       style={[styles.filterSection, styles.priceSection, animatedStyle]}
@@ -655,8 +788,8 @@ function PriceFilterSection({ animatedStyle }: { animatedStyle: object }) {
             accessibilityLabel={option.accessibilityLabel}
             key={option.key}
             label={option.label}
-            onPress={() => setSelectedMode(option.key)}
-            selected={selectedMode === option.key}
+            onPress={() => onChange(option.key)}
+            selected={value === option.key}
           />
         ))}
       </View>
@@ -676,25 +809,20 @@ const AVAILABILITY_OPTIONS: {
 
 function AvailabilityFilterSection({
   animatedStyle,
+  onChange,
+  value,
 }: {
   animatedStyle: object;
+  onChange: (value: FilterState["availability"]) => void;
+  value: FilterState["availability"];
 }) {
-  const [selectedOptions, setSelectedOptions] = useState<
-    Set<AvailabilityOptionId>
-  >(() => new Set());
-
   const toggleOption = (optionId: AvailabilityOptionId) => {
-    setSelectedOptions((current) => {
-      const next = new Set(current);
+    if (optionId === "open-spots") {
+      onChange({ ...value, openSpotsOnly: !value.openSpotsOnly });
+      return;
+    }
 
-      if (next.has(optionId)) {
-        next.delete(optionId);
-      } else {
-        next.add(optionId);
-      }
-
-      return next;
-    });
+    onChange({ ...value, instantJoinOnly: !value.instantJoinOnly });
   };
 
   return (
@@ -710,7 +838,11 @@ function AvailabilityFilterSection({
             key={option.id}
             label={option.label}
             onPress={() => toggleOption(option.id)}
-            selected={selectedOptions.has(option.id)}
+            selected={
+              option.id === "open-spots"
+                ? value.openSpotsOnly
+                : value.instantJoinOnly
+            }
             showDivider={index > 0}
           />
         ))}
@@ -788,7 +920,17 @@ function AvailabilityCheckboxRow({
   );
 }
 
-function SearchGhost({ subtitle, title }: { subtitle: string; title: string }) {
+function SearchGhost({
+  activeFilterCount,
+  subtitle,
+  title,
+}: {
+  activeFilterCount: number;
+  subtitle: string;
+  title: string;
+}) {
+  const hasActiveFilters = activeFilterCount > 0;
+
   return (
     <>
       <View style={styles.searchIconWrap}>
@@ -811,17 +953,27 @@ function SearchGhost({ subtitle, title }: { subtitle: string; title: string }) {
           {subtitle}
         </ThemedText>
       </View>
-      <View style={styles.searchTuneWrap}>
+      <View
+        style={[
+          styles.searchTuneWrap,
+          hasActiveFilters && styles.searchTuneWrapActive,
+        ]}
+      >
         <SymbolView
           name={{
             ios: "slider.horizontal.3",
             android: "tune",
             web: "tune",
           }}
-          size={18}
-          tintColor={Grapefruit}
+          size={hasActiveFilters ? 16 : 18}
+          tintColor={hasActiveFilters ? WarmSurface : Grapefruit}
           weight="bold"
         />
+        {hasActiveFilters && (
+          <ThemedText type="smallBold" style={styles.searchTuneCountText}>
+            {activeFilterCount}
+          </ThemedText>
+        )}
       </View>
     </>
   );
@@ -926,17 +1078,22 @@ const CATEGORY_OPTIONS: {
   },
 ];
 
-function CategoryFilterSection({ animatedStyle }: { animatedStyle: object }) {
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
-    () => new Set(),
-  );
+function CategoryFilterSection({
+  animatedStyle,
+  onChange,
+  value,
+}: {
+  animatedStyle: object;
+  onChange: (value: string[]) => void;
+  value: string[];
+}) {
   const countVisibility = useSharedValue(0);
 
   useEffect(() => {
-    countVisibility.value = withTiming(selectedCategories.size > 0 ? 1 : 0, {
+    countVisibility.value = withTiming(value.length > 0 ? 1 : 0, {
       duration: 140,
     });
-  }, [countVisibility, selectedCategories.size]);
+  }, [countVisibility, value.length]);
 
   const countAnimatedStyle = useAnimatedStyle(() => ({
     opacity: countVisibility.value,
@@ -948,17 +1105,15 @@ function CategoryFilterSection({ animatedStyle }: { animatedStyle: object }) {
   }));
 
   const toggleCategory = (categoryId: string) => {
-    setSelectedCategories((current) => {
-      const next = new Set(current);
+    const next = new Set(value);
 
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
-        next.add(categoryId);
-      }
+    if (next.has(categoryId)) {
+      next.delete(categoryId);
+    } else {
+      next.add(categoryId);
+    }
 
-      return next;
-    });
+    onChange([...next]);
   };
 
   return (
@@ -970,15 +1125,15 @@ function CategoryFilterSection({ animatedStyle }: { animatedStyle: object }) {
           Category
         </ThemedText>
         <Animated.View
-          accessibilityElementsHidden={selectedCategories.size === 0}
+          accessibilityElementsHidden={value.length === 0}
           importantForAccessibility={
-            selectedCategories.size === 0 ? "no-hide-descendants" : "auto"
+            value.length === 0 ? "no-hide-descendants" : "auto"
           }
           pointerEvents="none"
           style={[styles.categoryCount, countAnimatedStyle]}
         >
           <ThemedText type="smallBold" style={styles.categoryCountText}>
-            {selectedCategories.size || ""}
+            {value.length || ""}
           </ThemedText>
         </Animated.View>
       </View>
@@ -988,7 +1143,7 @@ function CategoryFilterSection({ animatedStyle }: { animatedStyle: object }) {
             category={category}
             key={category.id}
             onPress={() => toggleCategory(category.id)}
-            selected={selectedCategories.has(category.id)}
+            selected={value.includes(category.id)}
           />
         ))}
       </View>
@@ -1207,4 +1362,115 @@ function formatMonth(date: Date) {
 
 function formatLongDate(date: Date) {
   return `${WEEKDAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`;
+}
+
+export function createDefaultFilterState(): FilterState {
+  const today = startOfDay(new Date());
+
+  return {
+    availability: {
+      instantJoinOnly: false,
+      openSpotsOnly: false,
+    },
+    categoryIds: [],
+    priceMode: "all",
+    when: {
+      end: today,
+      preset: "anytime",
+      start: today,
+    },
+  };
+}
+
+export function getActiveFilterCount(filters: FilterState) {
+  return (
+    Number(filters.when.preset !== "anytime") +
+    Number(filters.categoryIds.length > 0) +
+    Number(filters.priceMode !== "all") +
+    Number(filters.availability.openSpotsOnly) +
+    Number(filters.availability.instantJoinOnly)
+  );
+}
+
+export function getFilterSummary(filters: FilterState) {
+  const parts: string[] = [];
+
+  if (filters.when.preset !== "anytime") {
+    parts.push(getWhenFilterLabel(filters.when));
+  }
+
+  if (filters.categoryIds.length === 1) {
+    parts.push(
+      CATEGORY_OPTIONS.find(
+        (category) => category.id === filters.categoryIds[0],
+      )?.label ?? "1 category",
+    );
+  } else if (filters.categoryIds.length > 1) {
+    parts.push(`${filters.categoryIds.length} categories`);
+  }
+
+  if (filters.priceMode !== "all") {
+    parts.push(
+      PRICE_OPTIONS.find((option) => option.key === filters.priceMode)?.label ??
+        "Price",
+    );
+  }
+
+  if (filters.availability.openSpotsOnly) {
+    parts.push("Open spots");
+  }
+
+  if (filters.availability.instantJoinOnly) {
+    parts.push("Instant join");
+  }
+
+  if (parts.length === 0) {
+    return "Any time · all categories";
+  }
+
+  const visibleParts = parts.slice(0, 2);
+  const remainingCount = parts.length - visibleParts.length;
+
+  return [
+    ...visibleParts,
+    ...(remainingCount > 0 ? [`+${remainingCount}`] : []),
+  ].join(" · ");
+}
+
+function cloneFilterState(filters: FilterState): FilterState {
+  return {
+    availability: { ...filters.availability },
+    categoryIds: [...filters.categoryIds],
+    priceMode: filters.priceMode,
+    when: {
+      end: filters.when.end ? new Date(filters.when.end) : null,
+      preset: filters.when.preset,
+      start: new Date(filters.when.start),
+    },
+  };
+}
+
+function normalizeFilterState(filters: FilterState): FilterState {
+  const normalized = cloneFilterState(filters);
+
+  if (normalized.when.preset === "custom" && normalized.when.end === null) {
+    normalized.when.end = new Date(normalized.when.start);
+  }
+
+  return normalized;
+}
+
+function getWhenFilterLabel(when: FilterState["when"]) {
+  switch (when.preset) {
+    case "today":
+      return "Today";
+    case "tomorrow":
+      return "Tomorrow";
+    case "weekend":
+      return "Weekend";
+    case "custom":
+      return formatRange(when.start, when.end);
+    default:
+      return "Any time";
+  }
 }

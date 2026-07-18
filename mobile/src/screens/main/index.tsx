@@ -17,7 +17,12 @@ import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { styles } from "./styles";
 import { getEvents } from "@/features/events/api/events-api";
 import type { EventDto } from "@meets/shared";
-import { FiltersOverlay } from "./components/filters-overlay";
+import {
+  createDefaultFilterState,
+  FiltersOverlay,
+  getActiveFilterCount,
+  getFilterSummary,
+} from "./components/filters-overlay";
 import { PlansDrawer } from "./components/plans-drawer";
 import { Search } from "./components/search";
 import { featuredPlans } from "./data/featured-plans";
@@ -27,6 +32,7 @@ import { createMapHtml } from "./lib/map-html";
 export default function MainScreen() {
   const [events, setEvents] = useState<EventDto[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
+  const [filters, setFilters] = useState(createDefaultFilterState);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const filtersProgress = useSharedValue(0);
@@ -39,6 +45,8 @@ export default function MainScreen() {
   );
   const mapHtml = useMemo(() => createMapHtml(plans), [plans]);
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) ?? null;
+  const activeFilterCount = getActiveFilterCount(filters);
+  const filterSummary = getFilterSummary(filters);
   const topOverlayOffset = Math.max(insets.top + Spacing.two, 52);
   const drawerTopInset = topOverlayOffset + 58 + 16;
   const expandedDrawerSnapPoint = Math.max(220, windowHeight - drawerTopInset);
@@ -159,7 +167,11 @@ export default function MainScreen() {
             style={styles.map}
           />
         </View>
-        <Search openFilters={openFilters} />
+        <Search
+          activeFilterCount={activeFilterCount}
+          filterSummary={filterSummary}
+          openFilters={openFilters}
+        />
 
         <PlansDrawer
           bottomInset={insets.bottom}
@@ -175,9 +187,12 @@ export default function MainScreen() {
         {filtersOpen && (
           <FiltersOverlay
             closeFilters={closeFilters}
+            filters={filters}
             filtersContentProgress={filtersContentProgress}
             filtersExpandedHeight={filtersExpandedHeight}
             filtersProgress={filtersProgress}
+            onApplyFilters={setFilters}
+            searchSubtitle={filterSummary}
             searchBarWidth={searchBarWidth}
             topOverlayOffset={topOverlayOffset}
           />

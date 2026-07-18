@@ -63,12 +63,25 @@ export const eventsStyles = StyleSheet.create({
     backgroundColor: Grapefruit,
   },
   searchInput: {
-    flex: 1,
-    minWidth: 0,
+    width: "100%",
+    height: 22,
     color: Charcoal,
     fontSize: 16,
     fontWeight: "600",
     padding: 0,
+  },
+  searchInputBlock: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: "center",
+  },
+  searchFilterSummary: {
+    color: MutedText,
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  searchFilterSummaryActive: {
+    color: Grapefruit,
   },
   searchTuneWrap: {
     width: 36,
@@ -77,6 +90,17 @@ export const eventsStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: GrapefruitSoft,
+  },
+  searchTuneWrapActive: {
+    width: 48,
+    flexDirection: "row",
+    gap: Spacing.one,
+    backgroundColor: Grapefruit,
+  },
+  searchTuneCountText: {
+    color: WarmSurface,
+    fontSize: 11,
+    lineHeight: 16,
   },
   clearSearchButton: {
     width: 32,

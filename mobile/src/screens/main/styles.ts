@@ -80,6 +80,17 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: GrapefruitSoft,
   },
+  searchTuneWrapActive: {
+    width: 48,
+    flexDirection: "row",
+    gap: Spacing.one,
+    backgroundColor: Grapefruit,
+  },
+  searchTuneCountText: {
+    color: WarmSurface,
+    fontSize: 11,
+    lineHeight: 16,
+  },
   clearSearchButton: {
     width: 32,
     height: 32,
@@ -143,15 +154,22 @@ export const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: WarmGray,
+    backgroundColor: GrapefruitSoft,
   },
   filtersHeaderTitle: {
     color: Charcoal,
     fontWeight: "800",
   },
-  filtersHeaderSpacer: {
+  filtersResetButton: {
     width: 38,
     height: 38,
+    borderRadius: 19,
+    overflow: "hidden",
+  },
+  filtersResetButtonPressable: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   filtersContent: {
     paddingHorizontal: Spacing.four,
@@ -522,6 +540,9 @@ export const styles = StyleSheet.create({
   },
   filtersSubmitText: {
     color: WarmSurface,
+  },
+  filtersSubmitBottomSpacer: {
+    height: 18,
   },
   drawer: {
     maxWidth: MaxContentWidth,

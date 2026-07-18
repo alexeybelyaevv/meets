@@ -1,5 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, View } from "react-native";
+import Animated, { LinearTransition } from "react-native-reanimated";
 import {
   Charcoal,
   Grapefruit,
@@ -13,12 +14,18 @@ import { Spacing } from "@/constants/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
+  activeFilterCount: number;
+  filterSummary: string;
   openFilters: () => void;
 }
 
-export const Search = ({ openFilters }: Props) => {
+export const Search = ({
+  activeFilterCount,
+  filterSummary,
+  openFilters,
+}: Props) => {
   const insets = useSafeAreaInsets();
-
+  const hasActiveFilters = activeFilterCount > 0;
   const topOverlayOffset = Math.max(insets.top + Spacing.two);
 
   return (
@@ -29,6 +36,7 @@ export const Search = ({ openFilters }: Props) => {
       ]}
     >
       <Pressable
+        accessibilityLabel={`Open filters. ${filterSummary}`}
         accessibilityRole="button"
         onPress={openFilters}
         style={({ pressed }) => [styles.searchBar, pressed && styles.pressed]}
@@ -49,22 +57,40 @@ export const Search = ({ openFilters }: Props) => {
           <ThemedText type="default" style={styles.searchTitle}>
             Search plans
           </ThemedText>
-          <ThemedText type="small" style={styles.searchSubtitle}>
-            Anywhere · any time · filters
+          <ThemedText
+            numberOfLines={1}
+            type="small"
+            style={[
+              styles.searchSubtitle,
+              hasActiveFilters && styles.searchSubtitleActive,
+            ]}
+          >
+            {filterSummary}
           </ThemedText>
         </View>
-        <View style={styles.searchTuneWrap}>
+        <Animated.View
+          layout={LinearTransition.duration(160)}
+          style={[
+            styles.searchTuneWrap,
+            hasActiveFilters && styles.searchTuneWrapActive,
+          ]}
+        >
           <SymbolView
             name={{
               ios: "slider.horizontal.3",
               android: "tune",
               web: "tune",
             }}
-            size={18}
-            tintColor={Grapefruit}
+            size={hasActiveFilters ? 16 : 18}
+            tintColor={hasActiveFilters ? WarmSurface : Grapefruit}
             weight="bold"
           />
-        </View>
+          {hasActiveFilters && (
+            <ThemedText type="smallBold" style={styles.searchTuneCountText}>
+              {activeFilterCount}
+            </ThemedText>
+          )}
+        </Animated.View>
       </Pressable>
     </View>
   );
@@ -116,6 +142,9 @@ const styles = StyleSheet.create({
     color: MutedText,
     fontSize: 12,
   },
+  searchSubtitleActive: {
+    color: Grapefruit,
+  },
   searchTuneWrap: {
     width: 36,
     height: 36,
@@ -123,6 +152,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: GrapefruitSoft,
+  },
+  searchTuneWrapActive: {
+    width: 48,
+    flexDirection: "row",
+    gap: Spacing.one,
+    backgroundColor: Grapefruit,
+  },
+  searchTuneCountText: {
+    color: WarmSurface,
+    fontSize: 11,
+    lineHeight: 16,
   },
   pressed: {
     opacity: 0.72,

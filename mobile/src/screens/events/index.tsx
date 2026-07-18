@@ -18,7 +18,12 @@ import {
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
-import { FiltersOverlay } from "@/screens/main/components/filters-overlay";
+import {
+  createDefaultFilterState,
+  FiltersOverlay,
+  getActiveFilterCount,
+  getFilterSummary,
+} from "@/screens/main/components/filters-overlay";
 import type { FeaturedPlan } from "@/screens/main/types";
 import { EventCard } from "./components/event-card";
 import { EventsEmptyState } from "./components/events-empty-state";
@@ -28,6 +33,7 @@ import { eventsStyles as styles } from "./styles";
 
 export function EventsScreen() {
   const router = useRouter();
+  const [filters, setFilters] = useState(createDefaultFilterState);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [query, setQuery] = useState("");
   const filtersProgress = useSharedValue(0);
@@ -36,6 +42,8 @@ export function EventsScreen() {
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const { eventsError, plans } = useEventPlans();
   const filteredPlans = useFilteredPlans(plans, query);
+  const activeFilterCount = getActiveFilterCount(filters);
+  const filterSummary = getFilterSummary(filters);
   const topOverlayOffset = Math.max(insets.top + Spacing.two, 52);
   const screenWidth = Math.min(windowWidth, MaxContentWidth);
   const searchBarWidth = Math.max(screenWidth - Spacing.three * 2, 0);
@@ -91,6 +99,8 @@ export function EventsScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.screen}>
         <EventsSearchBar
+          activeFilterCount={activeFilterCount}
+          filterSummary={filterSummary}
           onChangeQuery={setQuery}
           onClearQuery={() => setQuery("")}
           onOpenFilters={openFilters}
@@ -149,12 +159,14 @@ export function EventsScreen() {
         {filtersOpen && (
           <FiltersOverlay
             closeFilters={closeFilters}
+            filters={filters}
             filtersContentProgress={filtersContentProgress}
             filtersExpandedHeight={filtersExpandedHeight}
             filtersProgress={filtersProgress}
+            onApplyFilters={setFilters}
+            searchSubtitle={filterSummary}
             searchTitle="Search events"
             searchBarWidth={searchBarWidth}
-            submitLabel="Show events"
             topOverlayOffset={topOverlayOffset}
           />
         )}
