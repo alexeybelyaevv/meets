@@ -225,124 +225,279 @@ export const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: WarmBorder,
   },
-  filterSectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: Spacing.two,
-  },
   filterSectionTitle: {
     color: Charcoal,
     fontWeight: "800",
   },
-  filterValueText: {
-    color: Grapefruit,
+  whenSection: {
+    gap: Spacing.two,
+    borderWidth: 0,
+  },
+  whenSectionHeader: {
+    minHeight: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.two,
+  },
+  whenCalendarTrigger: {
+    minWidth: 36,
+    height: 36,
+    borderRadius: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.two,
+    paddingHorizontal: 10,
+    backgroundColor: WarmGray,
+  },
+  whenCalendarTriggerActive: {
+    backgroundColor: Grapefruit,
+  },
+  whenCalendarTriggerText: {
+    color: WarmSurface,
     fontSize: 12,
   },
-  filterChipGrid: {
+  whenPresetGrid: {
+    minHeight: 46,
+    flexDirection: "row",
+    gap: Spacing.half,
+    borderRadius: 23,
+    padding: Spacing.half,
+    backgroundColor: "#F2F0EF",
+  },
+  whenPreset: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 42,
+    borderRadius: 21,
+    overflow: "hidden",
+  },
+  whenPresetPressable: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.one,
+  },
+  whenPresetLabel: {
+    color: MutedText,
+    fontSize: 11,
+  },
+  whenPresetLabelSelected: {
+    color: WarmSurface,
+  },
+  calendar: {
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+    paddingTop: Spacing.three,
+    paddingBottom: Spacing.one,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: WarmBorder,
+  },
+  calendarHeader: {
+    minHeight: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  calendarArrow: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: WarmGray,
+  },
+  calendarArrowDisabled: {
+    opacity: 0.28,
+  },
+  calendarMonthLabel: {
+    color: Charcoal,
+    fontSize: 13,
+  },
+  calendarWeekRow: {
+    flexDirection: "row",
+  },
+  calendarWeekday: {
+    width: "14.2857%",
+    color: MutedText,
+    fontSize: 10,
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  calendarGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  calendarDayCell: {
+    width: "14.2857%",
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  calendarDayCellInRange: {
+    backgroundColor: GrapefruitSoft,
+  },
+  calendarDayCellRangeStart: {
+    borderTopLeftRadius: 19,
+    borderBottomLeftRadius: 19,
+  },
+  calendarDayCellRangeEnd: {
+    borderTopRightRadius: 19,
+    borderBottomRightRadius: 19,
+  },
+  calendarDayButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  calendarToday: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Grapefruit,
+  },
+  calendarDaySelected: {
+    backgroundColor: Grapefruit,
+    borderColor: Grapefruit,
+  },
+  calendarDayText: {
+    color: Charcoal,
+    fontSize: 12,
+  },
+  calendarDayTextDisabled: {
+    color: "#C7BFBB",
+  },
+  calendarTodayText: {
+    color: Grapefruit,
+  },
+  calendarDayTextInRange: {
+    color: Charcoal,
+  },
+  calendarDayTextSelected: {
+    color: WarmSurface,
+  },
+  calendarFooter: {
+    minHeight: 38,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: Spacing.one,
+  },
+  calendarResetButton: {
+    minHeight: 36,
+    justifyContent: "center",
+    paddingHorizontal: Spacing.two,
+  },
+  calendarResetText: {
+    color: MutedText,
+    fontSize: 12,
+  },
+  calendarDoneButton: {
+    minWidth: 68,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.three,
+    backgroundColor: Grapefruit,
+  },
+  calendarDoneText: {
+    color: WarmSurface,
+    fontSize: 12,
+  },
+  calendarActionDisabled: {
+    opacity: 0.35,
+  },
+  priceSection: {
+    gap: Spacing.two,
+    borderWidth: 0,
+  },
+  categorySection: {
+    gap: Spacing.three,
+    borderWidth: 0,
+  },
+  categoryHeader: {
+    minHeight: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.two,
+  },
+  categoryCount: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Grapefruit,
+  },
+  categoryCountText: {
+    color: WarmSurface,
+    fontSize: 11,
+  },
+  categoryGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.two,
   },
-  filterChip: {
-    minHeight: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: Spacing.three,
-    backgroundColor: "#FBF8F7",
+  categoryOption: {
+    width: "48%",
+    flexGrow: 1,
+    minHeight: 54,
+    borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: WarmBorder,
+    overflow: "hidden",
   },
-  filterChipSelected: {
-    backgroundColor: Grapefruit,
-    borderColor: Grapefruit,
+  categoryOptionPressable: {
+    flex: 1,
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.three,
   },
-  filterChipText: {
+  categoryOptionText: {
+    flex: 1,
     color: Charcoal,
     fontSize: 12,
+    lineHeight: 16,
   },
-  filterChipTextSelected: {
+  categoryOptionTextSelected: {
     color: WarmSurface,
   },
-  fakeRangeTrack: {
-    height: 34,
-    justifyContent: "center",
+  availabilitySection: {
+    gap: Spacing.three,
+    borderWidth: 0,
   },
-  fakeRangeFill: {
-    height: 6,
-    marginHorizontal: Spacing.two,
-    borderRadius: 3,
-    backgroundColor: GrapefruitSoft,
+  availabilityList: {
+    borderRadius: 18,
+    backgroundColor: "#F8F6F5",
+    overflow: "hidden",
   },
-  fakeRangeThumb: {
-    position: "absolute",
-    width: 24,
-    height: 24,
-    marginLeft: -12,
-    borderRadius: 12,
-    backgroundColor: Grapefruit,
-    borderWidth: 3,
-    borderColor: WarmSurface,
-  },
-  filterSegmented: {
-    minHeight: 48,
-    flexDirection: "row",
-    gap: Spacing.one,
-    borderRadius: 24,
-    padding: Spacing.half,
-    backgroundColor: WarmGray,
-  },
-  filterSegment: {
-    flex: 1,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  filterSegmentSelected: {
-    backgroundColor: WarmSurface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: WarmBorder,
-  },
-  filterSegmentText: {
-    color: MutedText,
-    fontSize: 12,
-  },
-  filterSegmentTextSelected: {
-    color: Charcoal,
-  },
-  filterOptionRow: {
-    minHeight: 62,
+  availabilityOption: {
+    minHeight: 54,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: Spacing.three,
+    paddingHorizontal: Spacing.three,
   },
-  filterOptionTitle: {
+  availabilityOptionDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: WarmBorder,
+  },
+  availabilityOptionText: {
+    flex: 1,
     color: Charcoal,
   },
-  filterOptionMeta: {
-    color: MutedText,
-  },
-  filterToggle: {
-    width: 50,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: "center",
-    paddingHorizontal: 3,
-    backgroundColor: WarmBorder,
-  },
-  filterToggleOn: {
-    backgroundColor: Grapefruit,
-  },
-  filterToggleThumb: {
+  availabilityCheckbox: {
     width: 24,
     height: 24,
-    borderRadius: 12,
-    backgroundColor: WarmSurface,
-  },
-  filterToggleThumbOn: {
-    alignSelf: "flex-end",
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth,
   },
   filtersSubmitWrap: {
     position: "absolute",
