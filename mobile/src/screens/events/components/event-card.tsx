@@ -1,51 +1,175 @@
+import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
+import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
+import Animated, {
+  Easing,
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { ThemedText } from "@/components/themed-text";
+import {
+  Charcoal,
+  Grapefruit,
+  MutedText,
+  WarmSurface,
+} from "@/screens/main/styles";
 import type { FeaturedPlan } from "@/screens/main/types";
 import { eventsStyles as styles } from "../styles";
 
 type EventCardProps = {
+  imageSource: number;
+  index: number;
   onPress: () => void;
   plan: FeaturedPlan;
 };
 
-export function EventCard({ onPress, plan }: EventCardProps) {
+export function EventCard({
+  imageSource,
+  index,
+  onPress,
+  plan,
+}: EventCardProps) {
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const setPressed = (pressed: boolean) => {
+    scale.set(
+      withSpring(pressed ? 0.985 : 1, {
+        damping: 19,
+        mass: 0.52,
+        stiffness: 250,
+      }),
+    );
+  };
+
+  const openEvent = () => {
+    void Haptics.selectionAsync();
+    onPress();
+  };
+
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+    <Animated.View
+      entering={FadeInDown.delay(Math.min(index * 65, 260))
+        .duration(380)
+        .easing(Easing.bezier(0.2, 0.82, 0.2, 1))}
     >
-      <View style={styles.image}>
-        <ThemedText type="smallBold" style={styles.imageText}>
-          {plan.tag.slice(0, 1)}
-        </ThemedText>
-      </View>
-      <View style={styles.cardContent}>
-        <View style={styles.cardTopLine}>
-          <ThemedText type="smallBold" style={styles.tag}>
-            {plan.tag}
-          </ThemedText>
-          <ThemedText type="smallBold" style={styles.price}>
-            {plan.price}
-          </ThemedText>
-        </View>
-        <ThemedText type="default" style={styles.cardTitle} numberOfLines={2}>
-          {plan.title}
-        </ThemedText>
-        <ThemedText type="small" style={styles.meta} numberOfLines={1}>
-          {plan.venue} · {plan.meta}
-        </ThemedText>
-        <View style={styles.cardFooter}>
-          <View style={styles.attendeesPill}>
-            <ThemedText type="smallBold" style={styles.attendeesText}>
-              {plan.attendeeCount}/{plan.capacity} going
-            </ThemedText>
+      <Animated.View style={animatedStyle}>
+        <Pressable
+          accessibilityLabel={`Open ${plan.title}`}
+          accessibilityRole="button"
+          onPress={openEvent}
+          onPressIn={() => setPressed(true)}
+          onPressOut={() => setPressed(false)}
+          style={styles.card}
+        >
+          <View style={styles.image}>
+            <Image
+              contentFit="cover"
+              source={imageSource}
+              style={styles.imageAsset}
+              transition={240}
+            />
+            <View style={styles.imageBadges}>
+              <View style={styles.tagPill}>
+                <ThemedText
+                  type="smallBold"
+                  style={styles.tag}
+                  numberOfLines={1}
+                >
+                  {plan.tag}
+                </ThemedText>
+              </View>
+              <View style={styles.timePill}>
+                <SymbolView
+                  name={{
+                    ios: "clock.fill",
+                    android: "schedule",
+                    web: "schedule",
+                  }}
+                  size={12}
+                  tintColor={WarmSurface}
+                  weight="bold"
+                />
+                <ThemedText
+                  type="smallBold"
+                  style={styles.timeText}
+                  numberOfLines={1}
+                >
+                  {plan.timeLabel}
+                </ThemedText>
+              </View>
+            </View>
           </View>
-          <ThemedText type="smallBold" style={styles.timeText}>
-            {plan.timeLabel}
-          </ThemedText>
-        </View>
-      </View>
-    </Pressable>
+
+          <View style={styles.cardContent}>
+            <View style={styles.cardTitleRow}>
+              <ThemedText
+                type="default"
+                style={styles.cardTitle}
+                numberOfLines={2}
+              >
+                {plan.title}
+              </ThemedText>
+              <View style={styles.cardArrow}>
+                <SymbolView
+                  name={{
+                    ios: "arrow.up.right",
+                    android: "north_east",
+                    web: "north_east",
+                  }}
+                  size={14}
+                  tintColor={Charcoal}
+                  weight="bold"
+                />
+              </View>
+            </View>
+
+            <View style={styles.locationRow}>
+              <SymbolView
+                name={{
+                  ios: "location.fill",
+                  android: "location_on",
+                  web: "location_on",
+                }}
+                size={14}
+                tintColor={MutedText}
+                weight="medium"
+              />
+              <ThemedText type="small" style={styles.meta} numberOfLines={1}>
+                {plan.venue}
+              </ThemedText>
+            </View>
+
+            <View style={styles.cardFooter}>
+              <View style={styles.attendeesPill}>
+                <SymbolView
+                  name={{
+                    ios: "person.2.fill",
+                    android: "groups",
+                    web: "groups",
+                  }}
+                  size={14}
+                  tintColor={Grapefruit}
+                  weight="medium"
+                />
+                <ThemedText type="smallBold" style={styles.attendeesText}>
+                  {plan.attendeeCount}/{plan.capacity} going
+                </ThemedText>
+              </View>
+              <View style={styles.pricePill}>
+                <ThemedText type="smallBold" style={styles.price}>
+                  {plan.price}
+                </ThemedText>
+              </View>
+            </View>
+          </View>
+        </Pressable>
+      </Animated.View>
+    </Animated.View>
   );
 }

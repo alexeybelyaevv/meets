@@ -1,19 +1,29 @@
+import { SymbolView } from "expo-symbols";
 import { View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
+import { Grapefruit } from "@/screens/main/styles";
 import { eventsStyles as styles } from "../styles";
 
-type EventsEmptyStateProps = {
-  query: string;
-};
-
-export function EventsEmptyState({ query }: EventsEmptyStateProps) {
+export function EventsEmptyState() {
   return (
     <View style={styles.emptyState}>
+      <View style={styles.emptyIcon}>
+        <SymbolView
+          name={{
+            ios: "sparkles",
+            android: "explore",
+            web: "explore",
+          }}
+          size={22}
+          tintColor={Grapefruit}
+          weight="bold"
+        />
+      </View>
       <ThemedText type="default" style={styles.emptyTitle}>
-        No events found
+        Nothing here yet
       </ThemedText>
       <ThemedText type="small" style={styles.emptyText}>
-        {query ? "Try another search term." : "Events will show up here soon."}
+        Fresh plans will show up here soon.
       </ThemedText>
     </View>
   );

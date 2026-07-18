@@ -1,33 +1,36 @@
 import { SymbolView } from "expo-symbols";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, View } from "react-native";
+import Animated, { LinearTransition } from "react-native-reanimated";
 import { ThemedText } from "@/components/themed-text";
-import { Grapefruit, MutedText, WarmSurface } from "@/screens/main/styles";
+import { Grapefruit, WarmSurface } from "@/screens/main/styles";
 import { eventsStyles as styles } from "../styles";
 
-type EventsSearchBarProps = {
+type EventsFilterBarProps = {
   activeFilterCount: number;
   filterSummary: string;
-  onChangeQuery: (query: string) => void;
-  onClearQuery: () => void;
   onOpenFilters: () => void;
-  query: string;
   top: number;
 };
 
-export function EventsSearchBar({
+export function EventsFilterBar({
   activeFilterCount,
   filterSummary,
-  onChangeQuery,
-  onClearQuery,
   onOpenFilters,
-  query,
   top,
-}: EventsSearchBarProps) {
+}: EventsFilterBarProps) {
   const hasActiveFilters = activeFilterCount > 0;
 
   return (
     <View style={[styles.searchRow, { top }]}>
-      <View style={styles.searchBar}>
+      <Pressable
+        accessibilityLabel={`Open filters. ${filterSummary}`}
+        accessibilityRole="button"
+        onPress={onOpenFilters}
+        style={({ pressed }) => [
+          styles.searchBar,
+          pressed && styles.pressed,
+        ]}
+      >
         <View style={styles.searchIconWrap}>
           <SymbolView
             name={{
@@ -40,17 +43,10 @@ export function EventsSearchBar({
             weight="bold"
           />
         </View>
-        <View style={styles.searchInputBlock}>
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={onChangeQuery}
-            placeholder="Search events"
-            placeholderTextColor={MutedText}
-            returnKeyType="search"
-            style={styles.searchInput}
-            value={query}
-          />
+        <View style={styles.searchTextBlock}>
+          <ThemedText type="default" style={styles.searchTitle}>
+            Events nearby
+          </ThemedText>
           <ThemedText
             numberOfLines={1}
             type="small"
@@ -62,33 +58,11 @@ export function EventsSearchBar({
             {filterSummary}
           </ThemedText>
         </View>
-        {query ? (
-          <Pressable
-            accessibilityLabel="Clear search"
-            accessibilityRole="button"
-            hitSlop={8}
-            onPress={onClearQuery}
-            style={({ pressed }) => [
-              styles.clearSearchButton,
-              pressed && styles.pressed,
-            ]}
-          >
-            <SymbolView
-              name={{ ios: "xmark", android: "close", web: "close" }}
-              size={16}
-              tintColor={MutedText}
-              weight="bold"
-            />
-          </Pressable>
-        ) : null}
-        <Pressable
-          accessibilityLabel={`Open filters. ${filterSummary}`}
-          accessibilityRole="button"
-          onPress={onOpenFilters}
-          style={({ pressed }) => [
+        <Animated.View
+          layout={LinearTransition.duration(160)}
+          style={[
             styles.searchTuneWrap,
             hasActiveFilters && styles.searchTuneWrapActive,
-            pressed && styles.pressed,
           ]}
         >
           <SymbolView
@@ -106,8 +80,8 @@ export function EventsSearchBar({
               {activeFilterCount}
             </ThemedText>
           )}
-        </Pressable>
-      </View>
+        </Animated.View>
+      </Pressable>
     </View>
   );
 }

@@ -431,6 +431,21 @@ export const styles = StyleSheet.create({
     gap: Spacing.two,
     borderWidth: 0,
   },
+  radiusSection: {
+    gap: Spacing.two,
+    borderWidth: 0,
+  },
+  radiusHeader: {
+    minHeight: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.two,
+  },
+  radiusValue: {
+    color: Grapefruit,
+    fontSize: 12,
+  },
   categorySection: {
     gap: Spacing.three,
     borderWidth: 0,

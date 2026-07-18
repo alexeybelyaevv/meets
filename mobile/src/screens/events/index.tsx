@@ -1,9 +1,10 @@
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { FlatList, View, useWindowDimensions } from "react-native";
-import {
+import Animated, {
   Easing,
+  FadeIn,
   runOnJS,
   useSharedValue,
   withDelay,
@@ -24,10 +25,10 @@ import {
   getActiveFilterCount,
   getFilterSummary,
 } from "@/screens/main/components/filters-overlay";
-import type { FeaturedPlan } from "@/screens/main/types";
+import { getTestEventImage } from "@/screens/main/data/event-images";
 import { EventCard } from "./components/event-card";
 import { EventsEmptyState } from "./components/events-empty-state";
-import { EventsSearchBar } from "./components/events-search-bar";
+import { EventsFilterBar } from "./components/events-filter-bar";
 import { useEventPlans } from "./hooks/use-event-plans";
 import { eventsStyles as styles } from "./styles";
 
@@ -35,15 +36,13 @@ export function EventsScreen() {
   const router = useRouter();
   const [filters, setFilters] = useState(createDefaultFilterState);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const filtersProgress = useSharedValue(0);
   const filtersContentProgress = useSharedValue(0);
   const insets = useSafeAreaInsets();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const { eventsError, plans } = useEventPlans();
-  const filteredPlans = useFilteredPlans(plans, query);
   const activeFilterCount = getActiveFilterCount(filters);
-  const filterSummary = getFilterSummary(filters);
+  const filterSummary = getFilterSummary(filters, { includeRadius: true });
   const topOverlayOffset = Math.max(insets.top + Spacing.two, 52);
   const screenWidth = Math.min(windowWidth, MaxContentWidth);
   const searchBarWidth = Math.max(screenWidth - Spacing.three * 2, 0);
@@ -98,38 +97,19 @@ export function EventsScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.screen}>
-        <EventsSearchBar
+        <EventsFilterBar
           activeFilterCount={activeFilterCount}
           filterSummary={filterSummary}
-          onChangeQuery={setQuery}
-          onClearQuery={() => setQuery("")}
           onOpenFilters={openFilters}
-          query={query}
           top={topOverlayOffset}
         />
 
         <View
           style={[
             styles.content,
-            { paddingTop: topOverlayOffset + 58 + Spacing.three },
+            { paddingTop: topOverlayOffset + 58 + Spacing.four },
           ]}
         >
-          <View style={styles.summaryRow}>
-            <View>
-              <ThemedText type="subtitle" style={styles.title}>
-                Events
-              </ThemedText>
-              <ThemedText type="small" style={styles.subtitle}>
-                {eventsError ? "Showing local examples" : "Live event feed"}
-              </ThemedText>
-            </View>
-            <View style={styles.countPill}>
-              <ThemedText type="smallBold" style={styles.countText}>
-                {filteredPlans.length}
-              </ThemedText>
-            </View>
-          </View>
-
           <FlatList
             contentContainerStyle={[
               styles.listContent,
@@ -138,11 +118,18 @@ export function EventsScreen() {
                   BottomNavigationInset + insets.bottom + Spacing.four,
               },
             ]}
-            data={filteredPlans}
+            data={plans}
             keyExtractor={(item) => item.id}
-            ListEmptyComponent={<EventsEmptyState query={query} />}
-            renderItem={({ item }) => (
+            ListHeaderComponent={
+              <EventsListHeader eventsError={eventsError} />
+            }
+            ListEmptyComponent={<EventsEmptyState />}
+            renderItem={({ index, item }) => (
               <EventCard
+                imageSource={getTestEventImage(
+                  plans.findIndex((plan) => plan.id === item.id),
+                )}
+                index={index}
                 onPress={() =>
                   router.push({
                     pathname: "/events/[eventId]",
@@ -165,8 +152,9 @@ export function EventsScreen() {
             filtersProgress={filtersProgress}
             onApplyFilters={setFilters}
             searchSubtitle={filterSummary}
-            searchTitle="Search events"
+            searchTitle="Events nearby"
             searchBarWidth={searchBarWidth}
+            showRadiusFilter
             topOverlayOffset={topOverlayOffset}
           />
         )}
@@ -176,18 +164,21 @@ export function EventsScreen() {
   );
 }
 
-function useFilteredPlans(plans: FeaturedPlan[], query: string) {
-  return useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-
-    if (!normalizedQuery) {
-      return plans;
-    }
-
-    return plans.filter((plan) =>
-      [plan.title, plan.venue, plan.tag, plan.meta].some((value) =>
-        value.toLowerCase().includes(normalizedQuery),
-      ),
-    );
-  }, [plans, query]);
+function EventsListHeader({
+  eventsError,
+}: {
+  eventsError: string | null;
+}) {
+  return (
+    <Animated.View entering={FadeIn.duration(260)} style={styles.listHeader}>
+      <ThemedText type="subtitle" style={styles.title}>
+        Discover nearby
+      </ThemedText>
+      <ThemedText type="small" style={styles.subtitle} numberOfLines={1}>
+        {eventsError
+          ? "Fresh local ideas while the live feed reconnects"
+          : "Plans worth leaving the house for"}
+      </ThemedText>
+    </Animated.View>
+  );
 }

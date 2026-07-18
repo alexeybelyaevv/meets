@@ -31,6 +31,8 @@ export type WhenPreset =
   | "custom";
 
 export type PriceMode = "all" | "free" | "pay-on-site" | "host-fee";
+export type RadiusKm = 2 | 5 | 25 | 50;
+export const DEFAULT_RADIUS_KM: RadiusKm = 50;
 
 export type FilterState = {
   availability: {
@@ -39,6 +41,7 @@ export type FilterState = {
   };
   categoryIds: string[];
   priceMode: PriceMode;
+  radiusKm: RadiusKm;
   when: {
     end: Date | null;
     preset: WhenPreset;
@@ -56,6 +59,7 @@ type FiltersOverlayProps = {
   searchSubtitle?: string;
   searchTitle?: string;
   searchBarWidth: number;
+  showRadiusFilter?: boolean;
   topOverlayOffset: number;
 };
 
@@ -69,6 +73,7 @@ export function FiltersOverlay({
   searchSubtitle = "Anywhere · any time · filters",
   searchTitle = "Search plans",
   searchBarWidth,
+  showRadiusFilter = false,
   topOverlayOffset,
 }: FiltersOverlayProps) {
   const [draftFilters, setDraftFilters] = useState<FilterState>(() =>
@@ -132,15 +137,19 @@ export function FiltersOverlay({
   );
   const categorySectionAnimatedStyle = useStaggeredFilterStyle(
     filtersContentProgress,
-    0.24,
+    0.32,
   );
   const priceSectionAnimatedStyle = useStaggeredFilterStyle(
     filtersContentProgress,
-    0.32,
+    0.4,
+  );
+  const radiusSectionAnimatedStyle = useStaggeredFilterStyle(
+    filtersContentProgress,
+    0.24,
   );
   const availabilitySectionAnimatedStyle = useStaggeredFilterStyle(
     filtersContentProgress,
-    0.4,
+    0.48,
   );
   const commitAndClose = () => {
     onApplyFilters(normalizeFilterState(draftFilters));
@@ -227,6 +236,15 @@ export function FiltersOverlay({
             }
             value={draftFilters.when}
           />
+          {showRadiusFilter && (
+            <RadiusFilterSection
+              animatedStyle={radiusSectionAnimatedStyle}
+              onChange={(radiusKm) =>
+                setDraftFilters((current) => ({ ...current, radiusKm }))
+              }
+              value={draftFilters.radiusKm}
+            />
+          )}
           <CategoryFilterSection
             animatedStyle={categorySectionAnimatedStyle}
             onChange={(categoryIds) =>
@@ -743,6 +761,49 @@ function FilterSegmentOption({
           {label}
         </ThemedText>
       </Pressable>
+    </Animated.View>
+  );
+}
+
+const RADIUS_OPTIONS: { label: string; value: RadiusKm }[] = [
+  { label: "2", value: 2 },
+  { label: "5", value: 5 },
+  { label: "25", value: 25 },
+  { label: "50+", value: 50 },
+];
+
+function RadiusFilterSection({
+  animatedStyle,
+  onChange,
+  value,
+}: {
+  animatedStyle: object;
+  onChange: (value: RadiusKm) => void;
+  value: RadiusKm;
+}) {
+  return (
+    <Animated.View
+      style={[styles.filterSection, styles.radiusSection, animatedStyle]}
+    >
+      <View style={styles.radiusHeader}>
+        <ThemedText type="default" style={styles.filterSectionTitle}>
+          Radius
+        </ThemedText>
+        <ThemedText type="smallBold" style={styles.radiusValue}>
+          {value === 50 ? "50+ km" : `${value} km`}
+        </ThemedText>
+      </View>
+      <View style={styles.whenPresetGrid}>
+        {RADIUS_OPTIONS.map((option) => (
+          <FilterSegmentOption
+            accessibilityLabel={`Within ${option.label} kilometers`}
+            key={option.value}
+            label={option.label}
+            onPress={() => onChange(option.value)}
+            selected={value === option.value}
+          />
+        ))}
+      </View>
     </Animated.View>
   );
 }
@@ -1374,6 +1435,7 @@ export function createDefaultFilterState(): FilterState {
     },
     categoryIds: [],
     priceMode: "all",
+    radiusKm: DEFAULT_RADIUS_KM,
     when: {
       end: today,
       preset: "anytime",
@@ -1387,13 +1449,25 @@ export function getActiveFilterCount(filters: FilterState) {
     Number(filters.when.preset !== "anytime") +
     Number(filters.categoryIds.length > 0) +
     Number(filters.priceMode !== "all") +
+    Number(filters.radiusKm !== DEFAULT_RADIUS_KM) +
     Number(filters.availability.openSpotsOnly) +
     Number(filters.availability.instantJoinOnly)
   );
 }
 
-export function getFilterSummary(filters: FilterState) {
+export function getFilterSummary(
+  filters: FilterState,
+  options: { includeRadius?: boolean } = {},
+) {
   const parts: string[] = [];
+
+  if (options.includeRadius) {
+    parts.push(
+      filters.radiusKm === 50
+        ? "Within 50+ km"
+        : `Within ${filters.radiusKm} km`,
+    );
+  }
 
   if (filters.when.preset !== "anytime") {
     parts.push(getWhenFilterLabel(filters.when));
@@ -1442,6 +1516,7 @@ function cloneFilterState(filters: FilterState): FilterState {
     availability: { ...filters.availability },
     categoryIds: [...filters.categoryIds],
     priceMode: filters.priceMode,
+    radiusKm: filters.radiusKm,
     when: {
       end: filters.when.end ? new Date(filters.when.end) : null,
       preset: filters.when.preset,
