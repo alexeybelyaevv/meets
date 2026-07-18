@@ -8,6 +8,7 @@ import {
   PlanDetailBody,
   PlanDetailHeader,
 } from "@/screens/main/components/plan-detail-content";
+import { getTestEventImage } from "@/screens/main/data/event-images";
 import { styles as mainStyles } from "@/screens/main/styles";
 import { useEventPlans } from "./hooks/use-event-plans";
 import { eventsStyles as styles } from "./styles";
@@ -39,7 +40,12 @@ export function EventDetailScreen() {
               ]}
               showsVerticalScrollIndicator={false}
             >
-              <PlanDetailBody plan={plan} />
+              <PlanDetailBody
+                imageSource={getTestEventImage(
+                  plans.findIndex((item) => item.id === plan.id),
+                )}
+                plan={plan}
+              />
             </ScrollView>
           </>
         ) : (

@@ -33,7 +33,6 @@ import { createMapHtml } from "./lib/map-html";
 export default function MainScreen() {
   const mapRef = useRef<WebView>(null);
   const [events, setEvents] = useState<EventDto[]>([]);
-  const [eventsError, setEventsError] = useState<string | null>(null);
   const [filters, setFilters] = useState(createDefaultFilterState);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -80,15 +79,10 @@ export default function MainScreen() {
       .then((nextEvents) => {
         if (!cancelled) {
           setEvents(nextEvents);
-          setEventsError(null);
         }
       })
-      .catch((error) => {
-        if (!cancelled) {
-          setEventsError(
-            error instanceof Error ? error.message : "Could not load events",
-          );
-        }
+      .catch(() => {
+        // Keep showing the local examples when the live feed is unavailable.
       });
 
     return () => {
@@ -196,7 +190,6 @@ export default function MainScreen() {
         <PlansDrawer
           bottomInset={insets.bottom}
           drawerTopInset={drawerTopInset}
-          eventsError={eventsError}
           onClearSelectedPlan={() => setSelectedPlanId(null)}
           onSelectPlan={setSelectedPlanId}
           plans={plans}
