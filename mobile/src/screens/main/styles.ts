@@ -26,7 +26,7 @@ export const styles = StyleSheet.create({
     backgroundColor: WarmGray,
   },
   mapLayer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: WarmGray,
   },
   searchBar: {
@@ -99,7 +99,7 @@ export const styles = StyleSheet.create({
     elevation: 14,
   },
   filtersOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 40,
     elevation: 40,
   },
